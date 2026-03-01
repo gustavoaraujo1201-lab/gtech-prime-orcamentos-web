@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Gerador Simples de Orçamentos (local)
 
 Como usar:
@@ -10,3 +11,6 @@ Como usar:
 Observações:
 - Tudo é salvo no seu navegador (localStorage). Se limpar o cache/dados do site, os orçamentos serão perdidos.
 - Se quiser persistência com servidor, posso converter isso para uma API simples (Node + SQLite/Postgres).
+=======
+# geradordeorcamentosoftprime
+>>>>>>> f854a2c1fce2a00b87a0e2a5f6aedc4bc90b29de
