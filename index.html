@@ -21,8 +21,8 @@
           <div class="logo">SoftPrime</div>
           <div class="site-title">Gerador de Orçamentos</div>
         </div>
-        <div class="header-actions" style="display:flex;align-items:center;gap:10px;">
-          <span id="userName" style="color:#4b5563;font-weight:500;font-size:14px;line-height:1;"></span>
+        <div class="header-actions">
+          <span id="userName"></span>
           <button id="logoutBtn" class="btn btn-ghost">🚪 Sair</button>
         </div>
       </div>
@@ -33,11 +33,11 @@
       <section class="card two-col">
         <div>
           <h4>📝 Dados do Emissor</h4>
-          <div style="margin-bottom:16px;">
+          <div style="margin-bottom:14px;">
             <label style="display:block;margin-bottom:6px;font-weight:600;font-size:14px;color:#4b5563;">
               🖼️ Logotipo (imagem até 4mb)
             </label>
-            <input type="file" id="issuerLogo" accept="image/*" style="width:100%;padding:8px;border:1.5px solid rgba(20,30,40,0.12);border-radius:7px;background:#f9fafb;cursor:pointer;font-size:14px;font-family:inherit;" aria-label="Logotipo do emissor" />
+            <input type="file" id="issuerLogo" accept="image/*" aria-label="Logotipo do emissor" />
             <div id="issuerLogoPreview" style="margin-top:10px;display:none;">
               <img id="issuerLogoImg" src="" alt="Logo preview" style="max-height:80px;max-width:200px;border-radius:6px;border:1px solid #e5e7eb;padding:4px;" />
               <button type="button" id="removeLogoBtn" style="margin-left:10px;color:#dc2626;background:none;border:none;cursor:pointer;font-size:13px;">✕ Remover</button>
@@ -73,10 +73,10 @@
 
         <div>
           <h4>👤 Dados do Cliente</h4>
-          <!-- Espaçador invisível para alinhar com bloco de logotipo do emissor -->
-          <div style="margin-bottom:16px;">
-            <div style="display:block;margin-bottom:6px;font-weight:600;font-size:14px;color:transparent;user-select:none;pointer-events:none;">🖼️ Logotipo (imagem até 4mb)</div>
-            <div style="width:100%;padding:8px;border:1.5px solid transparent;border-radius:7px;background:transparent;font-size:14px;font-family:inherit;visibility:hidden;">&nbsp;</div>
+          <!-- Invisible spacer matching left logo block height -->
+          <div style="margin-bottom:14px;visibility:hidden;" aria-hidden="true">
+            <div style="display:block;margin-bottom:6px;font-size:14px;">&nbsp;</div>
+            <input type="file" style="pointer-events:none;" tabindex="-1" />
           </div>
           <form id="clientForm" class="form-grid" autocomplete="off">
             <div class="full">
@@ -110,7 +110,7 @@
       <!-- Novo Orçamento -->
       <section class="card">
         <h4>💼 Novo Orçamento</h4>
-        <div class="form-grid" style="margin-bottom:20px;'>
+        <div class="form-grid" style="margin-bottom:20px;">
           <div>
             <label for="selectIssuer" style="display:block;margin-bottom:6px;font-weight:600;font-size:14px;color:#4b5563;">
               Emissor *
@@ -224,24 +224,16 @@
   <script src="config.js"></script>
   <script src="auth.js"></script>
   <script>
-    // Verifica se está logado ao carregar a página
     window.addEventListener('DOMContentLoaded', async () => {
-      // Aguarda o AuthManager inicializar
       await new Promise(resolve => setTimeout(resolve, 500));
-      
       if (!window.authManager || !window.authManager.isAuthenticated()) {
-        console.log('❌ Usuário não logado, redirecionando para login...');
         window.location.href = 'login.html';
       } else {
-        console.log('✅ Usuário autenticado, carregando app...');
-        
-        // Configura o botão de logout
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
           logoutBtn.onclick = async (e) => {
             e.preventDefault();
             if (!confirm('Deseja realmente sair?')) return;
-            
             await window.authManager.signOut();
           };
         }
