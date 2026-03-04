@@ -784,9 +784,9 @@ if (printBtn) {
         <body>${content}</body>
         </html>
       `);
-      w.document.close(); 
-      w.focus(); 
-      setTimeout(()=>w.print(), 400);
+      w.document.close();
+      w.focus();
+      printWindowWhenReady(w);
     } catch (err) {
       console.error("[ERROR] printBtn:", err);
       showNotification("Erro ao imprimir. Tente novamente.", "error");
@@ -943,6 +943,28 @@ function exportQuoteDoc(quoteId){
   }
 }
 
+function printWindowWhenReady(w) {
+  const allImgs = Array.from(w.document.images);
+  if (allImgs.length === 0) {
+    setTimeout(() => w.print(), 300);
+    return;
+  }
+  const pending = allImgs.filter(img => !img.complete);
+  if (pending.length === 0) {
+    setTimeout(() => w.print(), 200);
+    return;
+  }
+  let loaded = 0;
+  const tryPrint = () => {
+    loaded++;
+    if (loaded === pending.length) setTimeout(() => w.print(), 200);
+  };
+  for (const img of pending) {
+    img.addEventListener('load', tryPrint);
+    img.addEventListener('error', tryPrint);
+  }
+}
+
 function exportQuotePdf(quoteId){
   try {
     const q = store.quotes.find(x=>x.id===quoteId); 
@@ -979,7 +1001,7 @@ function exportQuotePdf(quoteId){
     `);
     w.document.close();
     w.focus();
-    setTimeout(()=> w.print(), 400);
+    printWindowWhenReady(w);
   } catch (err) {
     console.error("[ERROR] exportQuotePdf:", err);
     showNotification("Erro ao exportar PDF", "error");
