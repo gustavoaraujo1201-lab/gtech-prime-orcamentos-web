@@ -21,8 +21,8 @@
           <div class="logo">SoftPrime</div>
           <div class="site-title">Gerador de Orçamentos</div>
         </div>
-        <div class="header-actions">
-          <span id="userName" style="margin-right:8px; color:#4b5563; font-weight:500;"></span>
+        <div class="header-actions" style="display:flex;align-items:center;gap:10px;">
+          <span id="userName" style="color:#4b5563;font-weight:500;font-size:14px;line-height:1;"></span>
           <button id="logoutBtn" class="btn btn-ghost">🚪 Sair</button>
         </div>
       </div>
@@ -37,7 +37,11 @@
             <label style="display:block;margin-bottom:6px;font-weight:600;font-size:14px;color:#4b5563;">
               🖼️ Logotipo (imagem até 4mb)
             </label>
-            <input type="file" id="issuerLogo" accept="image/*" style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:8px;background:#f9fafb;cursor:pointer;" aria-label="Logotipo do emissor" />
+            <label id="issuerLogoLabel" style="display:flex;align-items:center;gap:12px;width:100%;min-height:48px;padding:10px 14px;border:1.5px solid rgba(20,30,40,0.12);border-radius:8px;background:#f9fafb;cursor:pointer;font-size:14px;color:#6b7278;transition:border-color 0.2s;">
+              <input type="file" id="issuerLogo" accept="image/*" style="display:none;" aria-label="Logotipo do emissor" />
+              <span style="background:#0d7de0;color:#fff;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:600;white-space:nowrap;">Escolher arquivo</span>
+              <span id="issuerLogoFileName" style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Nenhum arquivo escolhido</span>
+            </label>
             <div id="issuerLogoPreview" style="margin-top:10px;display:none;">
               <img id="issuerLogoImg" src="" alt="Logo preview" style="max-height:80px;max-width:200px;border-radius:6px;border:1px solid #e5e7eb;padding:4px;" />
               <button type="button" id="removeLogoBtn" style="margin-left:10px;color:#dc2626;background:none;border:none;cursor:pointer;font-size:13px;">✕ Remover</button>
@@ -74,7 +78,10 @@
         <div>
           <h4>👤 Dados do Cliente</h4>
           <!-- Espaçador invisível para alinhar com bloco de logotipo do emissor -->
-          <div style="margin-bottom:16px; min-height: 74px;"></div>
+          <div style="margin-bottom:16px;">
+            <div style="display:block;margin-bottom:6px;font-weight:600;font-size:14px;color:transparent;user-select:none;">🖼️ Logotipo (imagem até 4mb)</div>
+            <div style="width:100%;min-height:48px;padding:10px 14px;border:1.5px solid transparent;border-radius:8px;background:transparent;"></div>
+          </div>
           <form id="clientForm" class="form-grid" autocomplete="off">
             <div class="full">
               <label for="clientName" class="sr-only">Nome / Empresa</label>
@@ -242,6 +249,23 @@
             await window.authManager.signOut();
           };
         }
+      }
+    });
+
+    // Atualiza o texto do campo de logotipo ao selecionar arquivo
+    document.addEventListener('DOMContentLoaded', () => {
+      const issuerLogoInput = document.getElementById('issuerLogo');
+      const issuerLogoFileName = document.getElementById('issuerLogoFileName');
+      const issuerLogoLabel = document.getElementById('issuerLogoLabel');
+      if (issuerLogoInput && issuerLogoFileName) {
+        issuerLogoInput.addEventListener('change', (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            issuerLogoFileName.textContent = file.name;
+          } else {
+            issuerLogoFileName.textContent = 'Nenhum arquivo escolhido';
+          }
+        });
       }
     });
   </script>
