@@ -785,7 +785,8 @@ if (printBtn) {
             .signature .sig-line{width:60%;border-top:2px solid #1a1a1a;height:0}
             .signature .sig-name{font-weight:600;font-size:0.95rem;color:#1a1a1a;margin-top:8px}
             .print-footer{margin-top:40px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:0.85rem;color:#6b7280;text-align:center}
-            tfoot{page-break-inside:avoid;}
+            tfoot{display:none;}
+            thead{display:table-row-group;}
             tr{page-break-inside:avoid;page-break-after:auto;}
             @media print {
               .print-footer{margin-top:20px;}
@@ -1002,7 +1003,8 @@ function exportQuotePdf(quoteId){
           .signature .sig-line{width:60%;border-top:2px solid #1a1a1a;height:0}
           .signature .sig-name{font-weight:600;font-size:0.95rem;color:#1a1a1a;margin-top:8px}
           .print-footer{margin-top:40px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:0.85rem;color:#6b7280;text-align:center}
-          tfoot{page-break-inside:avoid;}
+          tfoot{display:none;}
+          thead{display:table-row-group;}
           tr{page-break-inside:avoid;page-break-after:auto;}
           @media print {
             .print-footer{margin-top:20px;}
@@ -1070,17 +1072,20 @@ function renderQuoteHtml(q, issuer, client){
             <td style="text-align:right"><strong>R$ ${money((it.quantidade||0)*(it.valorUnitario||0))}</strong></td>
           </tr>`).join('')}
         </tbody>
-        <tfoot style="page-break-inside:avoid;">
-          <tr>
-            <td colspan="3" style="text-align:right;font-weight:600;">Subtotal:</td>
-            <td style="text-align:right;font-weight:600;">R$ ${money(q.subtotal)}</td>
-          </tr>
-          <tr>
-            <td colspan="3" style="text-align:right;font-weight:700;font-size:18px;color:#0d7de0;">TOTAL:</td>
-            <td style="text-align:right;font-weight:700;font-size:18px;color:#0d7de0;">R$ ${money(q.total)}</td>
-          </tr>
-        </tfoot>
       </table>
+
+      <div style="page-break-inside:avoid;page-break-before:avoid;margin-top:0;">
+        <table style="width:100%;border-collapse:collapse;">
+          <tr>
+            <td colspan="3" style="text-align:right;font-weight:600;padding:10px;border:1px solid #e5e7eb;">Subtotal:</td>
+            <td style="text-align:right;font-weight:600;padding:10px;border:1px solid #e5e7eb;">R$ ${money(q.subtotal)}</td>
+          </tr>
+          <tr>
+            <td colspan="3" style="text-align:right;font-weight:700;font-size:18px;color:#0d7de0;padding:10px;border:1px solid #e5e7eb;">TOTAL:</td>
+            <td style="text-align:right;font-weight:700;font-size:18px;color:#0d7de0;padding:10px;border:1px solid #e5e7eb;">R$ ${money(q.total)}</td>
+          </tr>
+        </table>
+      </div>
 
       ${q.notes ? `<div style="margin-top:24px;padding:16px;background:#fffbeb;border-left:4px solid #f59e0b;border-radius:4px;">
         <strong style="color:#92400e;">Observações:</strong>
