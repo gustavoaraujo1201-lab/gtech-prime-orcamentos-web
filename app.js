@@ -781,12 +781,14 @@ if (printBtn) {
             table{width:100%;border-collapse:collapse;margin-top:16px}
             th,td{border:1px solid #e5e7eb;padding:10px;text-align:left}
             th{background:#f9fafb;font-weight:600}
-            .signature{margin-top:200px;display:flex;flex-direction:column;align-items:center;gap:8px}
+            .signature{margin-top:200px;display:flex;flex-direction:column;align-items:center;gap:8px;page-break-inside:avoid}
             .signature .sig-line{width:60%;border-top:2px solid #1a1a1a;height:0}
-            .signature .sig-name{font-weight:600;font-size:0.95rem;color:#1a1a1a}
-            .print-footer{margin-top:24px;font-size:0.85rem;color:#6b7280;text-align:center}
+            .signature .sig-name{font-weight:600;font-size:0.95rem;color:#1a1a1a;margin-top:8px}
+            .print-footer{margin-top:40px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:0.85rem;color:#6b7280;text-align:center}
+            tfoot{page-break-inside:avoid;}
+            tr{page-break-inside:avoid;page-break-after:auto;}
             @media print {
-              .print-footer{position:fixed;bottom:20px;left:0;right:0}
+              .print-footer{margin-top:20px;}
             }
           </style>
         </head>
@@ -999,9 +1001,11 @@ function exportQuotePdf(quoteId){
           .signature{margin-top:200px;display:flex;flex-direction:column;align-items:center;gap:8px;page-break-inside:avoid}
           .signature .sig-line{width:60%;border-top:2px solid #1a1a1a;height:0}
           .signature .sig-name{font-weight:600;font-size:0.95rem;color:#1a1a1a;margin-top:8px}
-          .print-footer{margin-top:24px;font-size:0.85rem;color:#6b7280;text-align:center}
+          .print-footer{margin-top:40px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:0.85rem;color:#6b7280;text-align:center}
+          tfoot{page-break-inside:avoid;}
+          tr{page-break-inside:avoid;page-break-after:auto;}
           @media print {
-            .print-footer{position:fixed;bottom:20px;left:0;right:0}
+            .print-footer{margin-top:20px;}
           }
         </style>
       </head>
@@ -1066,7 +1070,7 @@ function renderQuoteHtml(q, issuer, client){
             <td style="text-align:right"><strong>R$ ${money((it.quantidade||0)*(it.valorUnitario||0))}</strong></td>
           </tr>`).join('')}
         </tbody>
-        <tfoot>
+        <tfoot style="page-break-inside:avoid;">
           <tr>
             <td colspan="3" style="text-align:right;font-weight:600;">Subtotal:</td>
             <td style="text-align:right;font-weight:600;">R$ ${money(q.subtotal)}</td>
