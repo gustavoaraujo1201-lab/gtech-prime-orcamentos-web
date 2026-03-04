@@ -39,6 +39,16 @@
       <section class="card two-col">
         <div>
           <h4>📝 Dados do Emissor</h4>
+          <div style="margin-bottom:16px;">
+            <label style="display:block;margin-bottom:6px;font-weight:600;font-size:14px;color:#4b5563;">
+              🖼️ Logotipo (imagem até 4mb)
+            </label>
+            <input type="file" id="issuerLogo" accept="image/*" style="width:100%;padding:8px;border:1px solid #e5e7eb;border-radius:8px;background:#f9fafb;cursor:pointer;" aria-label="Logotipo do emissor" />
+            <div id="issuerLogoPreview" style="margin-top:10px;display:none;">
+              <img id="issuerLogoImg" src="" alt="Logo preview" style="max-height:80px;max-width:200px;border-radius:6px;border:1px solid #e5e7eb;padding:4px;" />
+              <button type="button" id="removeLogoBtn" style="margin-left:10px;color:#dc2626;background:none;border:none;cursor:pointer;font-size:13px;">✕ Remover</button>
+            </div>
+          </div>
           <form id="issuerForm" class="form-grid" autocomplete="off">
             <div class="full">
               <label for="issuerName" class="sr-only">Nome / Razão social</label>

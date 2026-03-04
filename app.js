@@ -61,6 +61,11 @@ const issuerPhone = document.getElementById("issuerPhone");
 const issuerSubmitBtn = document.getElementById("issuerSubmitBtn");
 const issuerCancelBtn = document.getElementById("issuerCancelBtn");
 
+const issuerLogoInput = document.getElementById("issuerLogo");
+const issuerLogoPreview = document.getElementById("issuerLogoPreview");
+const issuerLogoImg = document.getElementById("issuerLogoImg");
+const removeLogoBtn = document.getElementById("removeLogoBtn");
+
 const clientForm = document.getElementById("clientForm");
 const clientList = document.getElementById("clientList");
 const clientName = document.getElementById("clientName");
@@ -97,6 +102,7 @@ let editingQuoteId = null;
 let editingIssuerId = null;
 let editingClientId = null;
 let lastPreviewHtml = "";
+let currentIssuerLogoDataUrl = null; // base64 data URL do logo atual
 
 // ========== UTILITY FUNCTIONS ==========
 function escapeHtml(str){
@@ -146,6 +152,7 @@ function renderIssuers(){
       const li = document.createElement("li");
       li.innerHTML = `
         <div>
+          ${i.logo ? `<img src="${i.logo}" alt="Logo" style="max-height:40px;max-width:100px;margin-bottom:6px;border-radius:4px;" />` : ''}
           <strong>${escapeHtml(i.name)}</strong>
           <div class="meta">${escapeHtml(i.cnpjCpf||'')} ${i.phone ? '• ' + escapeHtml(i.phone) : ''}</div>
           <div class="meta">${escapeHtml(i.address||'')}</div>
@@ -341,11 +348,16 @@ if (issuerForm) {
           item.cnpjCpf = cnpjCpf; 
           item.address = address; 
           item.phone = phone;
+          item.logo = currentIssuerLogoDataUrl;
           saveStore(store);
           editingIssuerId = null;
           if (issuerSubmitBtn) issuerSubmitBtn.textContent = "Adicionar Emissor";
           if (issuerCancelBtn) issuerCancelBtn.style.display = "none";
           issuerForm.reset();
+          currentIssuerLogoDataUrl = null;
+          if (issuerLogoInput) issuerLogoInput.value = '';
+          if (issuerLogoPreview) issuerLogoPreview.style.display = 'none';
+          if (issuerLogoImg) issuerLogoImg.src = '';
           renderIssuers(); 
           renderQuotes();
           showNotification("Emissor atualizado com sucesso!", "success");
@@ -353,10 +365,14 @@ if (issuerForm) {
         }
       }
 
-      const newItem = { id: uid(), name, cnpjCpf, address, phone };
+      const newItem = { id: uid(), name, cnpjCpf, address, phone, logo: currentIssuerLogoDataUrl || null };
       store.issuers.push(newItem);
       saveStore(store);
       issuerForm.reset();
+      currentIssuerLogoDataUrl = null;
+      if (issuerLogoInput) issuerLogoInput.value = '';
+      if (issuerLogoPreview) issuerLogoPreview.style.display = 'none';
+      if (issuerLogoImg) issuerLogoImg.src = '';
       renderIssuers(); 
       renderQuotes();
       showNotification("Emissor adicionado com sucesso!", "success");
@@ -387,6 +403,15 @@ if (issuerList) {
         if (issuerCnpjCpf) issuerCnpjCpf.value = it.cnpjCpf || "";
         if (issuerAddress) issuerAddress.value = it.address || "";
         if (issuerPhone) issuerPhone.value = it.phone || "";
+        currentIssuerLogoDataUrl = it.logo || null;
+        if (issuerLogoImg && it.logo) {
+          issuerLogoImg.src = it.logo;
+          if (issuerLogoPreview) issuerLogoPreview.style.display = 'block';
+        } else {
+          if (issuerLogoPreview) issuerLogoPreview.style.display = 'none';
+          if (issuerLogoImg) issuerLogoImg.src = '';
+        }
+        if (issuerLogoInput) issuerLogoInput.value = '';
         if (issuerSubmitBtn) issuerSubmitBtn.textContent = "Atualizar Emissor";
         if (issuerCancelBtn) issuerCancelBtn.style.display = "inline-block";
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -403,6 +428,39 @@ if (issuerCancelBtn) {
     issuerForm && issuerForm.reset();
     if (issuerSubmitBtn) issuerSubmitBtn.textContent = "Adicionar Emissor";
     issuerCancelBtn.style.display = "none";
+    currentIssuerLogoDataUrl = null;
+    if (issuerLogoInput) issuerLogoInput.value = '';
+    if (issuerLogoPreview) issuerLogoPreview.style.display = 'none';
+    if (issuerLogoImg) issuerLogoImg.src = '';
+  });
+}
+
+// ========== ISSUER LOGO HANDLERS ==========
+if (issuerLogoInput) {
+  issuerLogoInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 4 * 1024 * 1024) {
+      showNotification('Imagem muito grande. Máximo 4MB.', 'error');
+      issuerLogoInput.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      currentIssuerLogoDataUrl = ev.target.result;
+      if (issuerLogoImg) issuerLogoImg.src = currentIssuerLogoDataUrl;
+      if (issuerLogoPreview) issuerLogoPreview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+if (removeLogoBtn) {
+  removeLogoBtn.addEventListener('click', () => {
+    currentIssuerLogoDataUrl = null;
+    if (issuerLogoInput) issuerLogoInput.value = '';
+    if (issuerLogoPreview) issuerLogoPreview.style.display = 'none';
+    if (issuerLogoImg) issuerLogoImg.src = '';
   });
 }
 
@@ -932,9 +990,13 @@ function renderQuoteHtml(q, issuer, client){
   const dateOnly = formatDateISOtoLocal(q.createdAt);
   const issuerContact = `${issuer.address ? escapeHtml(issuer.address) + '<br/>' : ''}${issuer.phone ? 'Tel: ' + escapeHtml(issuer.phone) : ''}`;
   const clientContact = `${client.address ? escapeHtml(client.address) + '<br/>' : ''}${client.phone ? 'Tel: ' + escapeHtml(client.phone) : ''}`;
+  const logoHtml = issuer.logo
+    ? `<div style="text-align:center;margin-bottom:16px;"><img src="${issuer.logo}" alt="Logo" style="max-height:80px;max-width:200px;" /></div>`
+    : '';
 
   return `
     <div style="max-width:800px;margin:0 auto;padding:20px;">
+      ${logoHtml}
       <div style="text-align:center;margin-bottom:30px;">
         <h1 style="color:#0d7de0;margin:0;font-size:28px;">ORÇAMENTO</h1>
         <h2 style="margin:8px 0;font-size:22px;">${escapeHtml(q.numero || q.id)}</h2>
