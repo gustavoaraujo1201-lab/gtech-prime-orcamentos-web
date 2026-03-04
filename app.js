@@ -592,6 +592,15 @@ if (saveQuoteBtn) {
         return;
       }
 
+      // Persist pending logo to the issuer if not yet saved
+      if (currentIssuerLogoDataUrl) {
+        const issuerToUpdate = store.issuers.find(i => i.id === issuerId);
+        if (issuerToUpdate && !issuerToUpdate.logo) {
+          issuerToUpdate.logo = currentIssuerLogoDataUrl;
+          saveStore(store);
+        }
+      }
+
       const validItems = currentItems.filter(it => (it.descricao || "").trim() !== "");
       if (validItems.length === 0) {
         showNotification("Adicione pelo menos um item com descrição", "error");
@@ -1013,7 +1022,7 @@ function renderQuoteHtml(q, issuer, client){
   const issuerContact = `${issuer.address ? escapeHtml(issuer.address) + '<br/>' : ''}${issuer.phone ? 'Tel: ' + escapeHtml(issuer.phone) : ''}`;
   const clientContact = `${client.address ? escapeHtml(client.address) + '<br/>' : ''}${client.phone ? 'Tel: ' + escapeHtml(client.phone) : ''}`;
   const logoHtml = issuer.logo
-    ? `<div style="text-align:center;margin-bottom:16px;"><img src="${issuer.logo}" alt="Logo" style="max-height:80px;max-width:200px;" /></div>`
+    ? `<div style="text-align:center;margin-bottom:24px;padding-bottom:20px;border-bottom:2px solid #e5e7eb;"><img src="${issuer.logo}" alt="Logo" style="max-height:120px;max-width:300px;object-fit:contain;" /></div>`
     : '';
 
   return `
