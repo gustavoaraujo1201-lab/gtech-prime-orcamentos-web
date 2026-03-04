@@ -22,14 +22,8 @@
           <div class="site-title">Gerador de Orçamentos</div>
         </div>
         <div class="header-actions">
-          <span id="userName" style="margin-right:12px; color:#4b5563; font-weight:500;"></span>
+          <span id="userName" style="margin-right:8px; color:#4b5563; font-weight:500;"></span>
           <button id="logoutBtn" class="btn btn-ghost">🚪 Sair</button>
-          <button id="exportCsvBtn" class="btn btn-ghost" title="Exportar todos os orçamentos para Excel">
-            📊 Exportar Excel
-          </button>
-          <button id="exportDocBtn" class="btn btn-ghost" title="Exportar orçamento atual para Word">
-            📄 Exportar Word
-          </button>
         </div>
       </div>
     </header>
@@ -79,6 +73,8 @@
 
         <div>
           <h4>👤 Dados do Cliente</h4>
+          <!-- Espaçador invisível para alinhar com bloco de logotipo do emissor -->
+          <div style="margin-bottom:16px; min-height: 74px;"></div>
           <form id="clientForm" class="form-grid" autocomplete="off">
             <div class="full">
               <label for="clientName" class="sr-only">Nome / Empresa</label>
