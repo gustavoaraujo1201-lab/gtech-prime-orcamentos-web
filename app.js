@@ -572,15 +572,6 @@ if (addItemBtn) {
 }
 
 // ========== QUOTE HANDLERS ==========
-function existsSameNumberForIssuer(numero, issuerId, excludeQuoteId = null){
-  if (!numero) return false;
-  return (store.quotes || []).some(q => 
-    q.numero === numero && 
-    q.issuerId === issuerId && 
-    q.id !== excludeQuoteId
-  );
-}
-
 if (saveQuoteBtn) {
   saveQuoteBtn.addEventListener("click", ()=>{
     try {
@@ -615,18 +606,6 @@ if (saveQuoteBtn) {
       if (!numeroValue) {
         numeroValue = formatQuoteNumber(store.nextQuoteNumber || computeNextQuoteNumberFromQuotes(store.quotes));
         generatedNumber = true;
-      }
-
-      if (editingQuoteId) {
-        if (existsSameNumberForIssuer(numeroValue, issuerId, editingQuoteId)) {
-          showNotification("Já existe um orçamento com esse número para o mesmo emissor", "error");
-          return;
-        }
-      } else {
-        if (existsSameNumberForIssuer(numeroValue, issuerId, null)) {
-          showNotification("Já existe um orçamento com esse número para o mesmo emissor", "error");
-          return;
-        }
       }
 
       const notesVal = (notes && notes.value || "").trim();
