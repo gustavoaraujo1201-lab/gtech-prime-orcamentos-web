@@ -11,16 +11,11 @@ const money = v => Number(v||0).toFixed(2);
 function loadStore(){
   const raw = localStorage.getItem(STORE_KEY);
   if (!raw){
-    const seed = { issuers: [], clients: [], quotes: [], nextQuoteNumber: 1 };
+    const seed = { issuers: [], clients: [], quotes: [] };
     localStorage.setItem(STORE_KEY, JSON.stringify(seed));
     return seed;
   }
   const s = JSON.parse(raw);
-  const minNext = computeNextQuoteNumberFromQuotes(s.quotes || []);
-  if (!s.nextQuoteNumber || s.nextQuoteNumber < minNext) {
-    s.nextQuoteNumber = minNext;
-    localStorage.setItem(STORE_KEY, JSON.stringify(s));
-  }
   s.issuers = s.issuers || [];
   s.clients = s.clients || [];
   s.quotes = s.quotes || [];
@@ -35,6 +30,21 @@ function computeNextQuoteNumberFromQuotes(quotes){
   if (!quotes || !quotes.length) return 1;
   let max = 0;
   for (const q of quotes){
+    if (!q.numero) continue;
+    const m = String(q.numero).match(/(\d+)(?!.*\d)/);
+    if (m) {
+      const n = parseInt(m[0], 10);
+      if (!isNaN(n) && n > max) max = n;
+    }
+  }
+  return max + 1;
+}
+
+function computeNextQuoteNumberForIssuer(issuerId){
+  const issuerQuotes = (store.quotes || []).filter(q => q.issuerId === issuerId);
+  if (!issuerQuotes.length) return 1;
+  let max = 0;
+  for (const q of issuerQuotes){
     if (!q.numero) continue;
     const m = String(q.numero).match(/(\d+)(?!.*\d)/);
     if (m) {
@@ -130,8 +140,15 @@ function setDefaultQuoteFields(){
   if (!quoteNumber || !quoteDate) return;
   if (editingQuoteId) return;
 
-  const next = store.nextQuoteNumber || computeNextQuoteNumberFromQuotes(store.quotes || []);
-  quoteNumber.value = formatQuoteNumber(next);
+  const selectedIssuerId = selectIssuer ? selectIssuer.value : null;
+  let nextNum;
+  if (selectedIssuerId) {
+    nextNum = computeNextQuoteNumberForIssuer(selectedIssuerId);
+  } else {
+    nextNum = 1;
+  }
+
+  quoteNumber.value = formatQuoteNumber(nextNum);
   quoteDate.value = new Date().toLocaleDateString('pt-BR');
   if (notes) notes.value = "";
 }
@@ -573,6 +590,14 @@ if (addItemBtn) {
 }
 
 // ========== QUOTE HANDLERS ==========
+if (selectIssuer) {
+  selectIssuer.addEventListener('change', () => {
+    if (!editingQuoteId) {
+      setDefaultQuoteFields();
+    }
+  });
+}
+
 if (saveQuoteBtn) {
   saveQuoteBtn.addEventListener("click", ()=>{
     try {
@@ -605,7 +630,7 @@ if (saveQuoteBtn) {
       let generatedNumber = false;
       
       if (!numeroValue) {
-        numeroValue = formatQuoteNumber(store.nextQuoteNumber || computeNextQuoteNumberFromQuotes(store.quotes));
+        numeroValue = formatQuoteNumber(computeNextQuoteNumberForIssuer(issuerId));
         generatedNumber = true;
       }
 
@@ -647,8 +672,6 @@ if (saveQuoteBtn) {
       };
       
       store.quotes.push(q);
-      
-      store.nextQuoteNumber = (store.nextQuoteNumber || 1) + 1;
       
       saveStore(store);
       
