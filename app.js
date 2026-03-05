@@ -777,20 +777,18 @@ if (printBtn) {
           <meta charset="utf-8">
           <title>Orçamento - SoftPrime</title>
           <style>
-            body{font-family:Arial,Helvetica,sans-serif;padding:30px;color:#1a1a1a;max-width:800px;margin:0 auto}
+            body{font-family:Arial,Helvetica,sans-serif;padding:30px 30px 70px 30px;color:#1a1a1a;max-width:800px;margin:0 auto}
             table{width:100%;border-collapse:collapse;margin-top:16px}
             th,td{border:1px solid #e5e7eb;padding:10px;text-align:left}
             th{background:#f9fafb;font-weight:600}
-            .signature{margin-top:200px;display:flex;flex-direction:column;align-items:center;gap:8px;page-break-inside:avoid}
+            .signature{margin-top:60px;display:flex;flex-direction:column;align-items:center;gap:8px;page-break-inside:avoid}
             .signature .sig-line{width:60%;border-top:2px solid #1a1a1a;height:0}
             .signature .sig-name{font-weight:600;font-size:0.95rem;color:#1a1a1a;margin-top:8px}
-            .print-footer{margin-top:40px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:0.85rem;color:#6b7280;text-align:center}
+            .print-footer{position:fixed;bottom:0;left:0;right:0;text-align:center;font-size:0.85rem;color:#6b7280;padding:8px 16px;border-top:1px solid #e5e7eb;background:white;}
             tfoot{display:none;}
             thead{display:table-row-group;}
             tr{page-break-inside:avoid;page-break-after:auto;}
-            @media print {
-              .print-footer{margin-top:20px;}
-            }
+            .totals-block{page-break-inside:avoid;page-break-before:avoid;margin-top:0}
           </style>
         </head>
         <body>${content}</body>
@@ -995,20 +993,18 @@ function exportQuotePdf(quoteId){
         <meta charset="utf-8">
         <title>Orçamento ${escapeHtml(q.numero || q.id)}</title>
         <style>
-          body{font-family:Arial,Helvetica,sans-serif;padding:30px;color:#1a1a1a;max-width:800px;margin:0 auto}
+          body{font-family:Arial,Helvetica,sans-serif;padding:30px 30px 70px 30px;color:#1a1a1a;max-width:800px;margin:0 auto}
           table{width:100%;border-collapse:collapse;margin-top:16px}
-          th,td{border:1px solid #e5e7eb;padding:10px}
+          th,td{border:1px solid #e5e7eb;padding:10px;text-align:left}
           th{background:#f9fafb;font-weight:600}
-          .signature{margin-top:200px;display:flex;flex-direction:column;align-items:center;gap:8px;page-break-inside:avoid}
+          .signature{margin-top:60px;display:flex;flex-direction:column;align-items:center;gap:8px;page-break-inside:avoid}
           .signature .sig-line{width:60%;border-top:2px solid #1a1a1a;height:0}
           .signature .sig-name{font-weight:600;font-size:0.95rem;color:#1a1a1a;margin-top:8px}
-          .print-footer{margin-top:40px;padding-top:16px;border-top:1px solid #e5e7eb;font-size:0.85rem;color:#6b7280;text-align:center}
+          .print-footer{position:fixed;bottom:0;left:0;right:0;text-align:center;font-size:0.85rem;color:#6b7280;padding:8px 16px;border-top:1px solid #e5e7eb;background:white;}
           tfoot{display:none;}
           thead{display:table-row-group;}
           tr{page-break-inside:avoid;page-break-after:auto;}
-          @media print {
-            .print-footer{margin-top:20px;}
-          }
+          .totals-block{page-break-inside:avoid;page-break-before:avoid;margin-top:0}
         </style>
       </head>
       <body>${html}</body>
