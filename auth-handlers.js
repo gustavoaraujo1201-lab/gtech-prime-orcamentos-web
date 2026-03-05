@@ -128,13 +128,13 @@ document.addEventListener('DOMContentLoaded', () => {
     signupForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       
-      const name = document.getElementById('signupName').value.trim();
+      const username = document.getElementById('signupUsername').value.trim();
       const email = document.getElementById('signupEmail').value.trim();
       const password = document.getElementById('signupPassword').value;
 
-      console.log('[AUTH] Tentando cadastro:', { name, email });
+      console.log('[AUTH] Tentando cadastro:', { username, email });
 
-      if (!name || !email || !password) {
+      if (!username || !email || !password) {
         showMessage('Preencha todos os campos', 'error');
         return;
       }
@@ -152,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       showMessage('🔄 Criando conta...', 'info');
 
-      const result = await window.authManager.signUp(email, password, name);
+      const result = await window.authManager.signUp(email, password, username);
       
       if (result.success) {
         showMessage(result.message, 'success');
