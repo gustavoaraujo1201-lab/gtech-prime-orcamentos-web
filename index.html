@@ -195,6 +195,30 @@
       <!-- Orçamentos Salvos -->
       <section class="card">
         <h4>💾 Orçamentos Salvos</h4>
+
+        <!-- Barra de filtro/busca -->
+        <div class="quotes-filter-bar">
+          <div class="filter-search-wrap">
+            <span class="filter-icon">🔍</span>
+            <input
+              type="text"
+              id="quotesSearch"
+              placeholder="Pesquisar por número, emissor, cliente, data ou valor..."
+              class="filter-input"
+              autocomplete="off"
+              aria-label="Pesquisar orçamentos"
+            />
+            <button id="clearSearch" class="btn-clear-search" title="Limpar pesquisa" style="display:none;">✕</button>
+          </div>
+
+          <div class="filter-tags" id="filterTags">
+            <span class="filter-tag-label">Filtrar por:</span>
+            <button class="filter-tag active" data-filter="all">Todos</button>
+          </div>
+
+          <div class="filter-results-count" id="filterResultsCount"></div>
+        </div>
+
         <ul id="quotesList" class="list" aria-label="Lista de orçamentos salvos"></ul>
       </section>
     </main>
