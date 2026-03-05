@@ -99,6 +99,10 @@ const grandTotalEl = document.getElementById("grandTotal");
 const saveQuoteBtn = document.getElementById("saveQuoteBtn");
 const cancelEditBtn = document.getElementById("cancelEditBtn");
 const quotesList = document.getElementById("quotesList");
+const quotesSearch = document.getElementById("quotesSearch");
+const clearSearch = document.getElementById("clearSearch");
+const filterResultsCount = document.getElementById("filterResultsCount");
+const filterTagsEl = document.getElementById("filterTags");
 
 const exportCsvBtn = document.getElementById("exportCsvBtn");
 const exportDocBtn = document.getElementById("exportDocBtn");
@@ -114,6 +118,98 @@ let editingIssuerId = null;
 let editingClientId = null;
 let lastPreviewHtml = "";
 let currentIssuerLogoDataUrl = null; // base64 data URL do logo atual
+
+// ===== FILTRO DE ORÇAMENTOS =====
+let activeIssuerFilter = 'all';
+let searchQuery = '';
+
+function normalizeStr(str) {
+  return String(str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+function filterQuotes(quotes) {
+  let result = quotes;
+
+  if (activeIssuerFilter !== 'all') {
+    result = result.filter(q => q.issuerId === activeIssuerFilter);
+  }
+
+  const q = normalizeStr(searchQuery);
+  if (q.length > 0) {
+    result = result.filter(quote => {
+      const issuer = store.issuers.find(i => i.id === quote.issuerId) || {};
+      const client = store.clients.find(c => c.id === quote.clientId) || {};
+      const fields = [
+        quote.numero || '',
+        issuer.name || '',
+        client.name || '',
+        formatDateISOtoLocal(quote.createdAt),
+        money(quote.total),
+      ];
+      return fields.some(f => normalizeStr(f).includes(q));
+    });
+  }
+
+  return result;
+}
+
+function highlightText(text, query) {
+  if (!query) return escapeHtml(text);
+  const normalizedText = normalizeStr(text);
+  const normalizedQuery = normalizeStr(query);
+  if (!normalizedQuery) return escapeHtml(text);
+  const idx = normalizedText.indexOf(normalizedQuery);
+  if (idx === -1) return escapeHtml(text);
+  // Slice the original text (pre-escape) to avoid HTML entity length mismatches,
+  // then escape each fragment individually.
+  return (
+    escapeHtml(text.slice(0, idx)) +
+    '<mark class="search-highlight">' +
+    escapeHtml(text.slice(idx, idx + normalizedQuery.length)) +
+    '</mark>' +
+    escapeHtml(text.slice(idx + normalizedQuery.length))
+  );
+}
+
+function renderFilterTags() {
+  if (!filterTagsEl) return;
+
+  // Remove dynamically generated issuer tags (keep "Todos")
+  filterTagsEl.querySelectorAll('.filter-tag[data-issuer]').forEach(t => t.remove());
+
+  // Update "Todos" active state
+  const allBtn = filterTagsEl.querySelector('.filter-tag[data-filter="all"]');
+  if (allBtn) {
+    allBtn.classList.toggle('active', activeIssuerFilter === 'all');
+    if (!allBtn._listenerAdded) {
+      allBtn._listenerAdded = true;
+      allBtn.addEventListener('click', () => {
+        activeIssuerFilter = 'all';
+        renderQuotes();
+      });
+    }
+  }
+
+  // Add a tag per unique issuer that has quotes
+  const issuersSeen = new Set();
+  (store.quotes || []).forEach(q => {
+    if (issuersSeen.has(q.issuerId)) return;
+    issuersSeen.add(q.issuerId);
+    const issuer = store.issuers.find(i => i.id === q.issuerId);
+    if (!issuer) return;
+    const btn = document.createElement('button');
+    btn.className = 'filter-tag' + (activeIssuerFilter === q.issuerId ? ' active' : '');
+    btn.dataset.issuer = q.issuerId;
+    btn.dataset.filter = q.issuerId;
+    btn.textContent = issuer.name.length > 22 ? issuer.name.slice(0, 20) + '…' : issuer.name;
+    btn.title = issuer.name;
+    btn.addEventListener('click', () => {
+      activeIssuerFilter = q.issuerId;
+      renderQuotes();
+    });
+    filterTagsEl.appendChild(btn);
+  });
+}
 
 // ========== UTILITY FUNCTIONS ==========
 function escapeHtml(str){
@@ -221,26 +317,51 @@ function renderClients(){
 function renderQuotes(){
   if (!quotesList) return;
   quotesList.innerHTML = "";
-  
-  if (!store.quotes.length) { 
-    quotesList.innerHTML = "<li style='text-align:center;color:#9ca3af;'>📭 Nenhum orçamento salvo ainda</li>"; 
-    return; 
+
+  renderFilterTags();
+
+  if (!store.quotes.length) {
+    quotesList.innerHTML = "<li style='text-align:center;color:#9ca3af;'>📭 Nenhum orçamento salvo ainda</li>";
+    if (filterResultsCount) { filterResultsCount.textContent = ''; filterResultsCount.className = 'filter-results-count'; }
+    return;
   }
-  
-  store.quotes.slice().reverse().forEach(q=>{
+
+  const filtered = filterQuotes(store.quotes.slice().reverse());
+  const total = store.quotes.length;
+  const shown = filtered.length;
+  const isFiltering = activeIssuerFilter !== 'all' || searchQuery.length > 0;
+
+  if (filterResultsCount) {
+    if (isFiltering) {
+      filterResultsCount.textContent = shown === 0
+        ? 'Nenhum orçamento encontrado'
+        : `Exibindo ${shown} de ${total} orçamento${total !== 1 ? 's' : ''}`;
+      filterResultsCount.className = 'filter-results-count' + (shown === 0 ? ' no-results' : '');
+    } else {
+      filterResultsCount.textContent = '';
+      filterResultsCount.className = 'filter-results-count';
+    }
+  }
+
+  if (filtered.length === 0) {
+    quotesList.innerHTML = "<li style='text-align:center;color:#9ca3af;'>🔍 Nenhum orçamento corresponde à pesquisa</li>";
+    return;
+  }
+
+  filtered.forEach(q=>{
     const issuer = store.issuers.find(i=>i.id===q.issuerId) || {};
     const client = store.clients.find(c=>c.id===q.clientId) || {};
     const li = document.createElement("li");
     li.innerHTML = `
       <div style="flex:1;">
-        <strong>📄 Orçamento ${escapeHtml(q.numero||q.id)}</strong>
+        <strong>📄 Orçamento ${highlightText(q.numero||q.id, searchQuery)}</strong>
         <div class="meta">
-          <span style="color:#0d7de0;">De:</span> ${escapeHtml(issuer.name||'—')} 
-          <span style="margin:0 8px;">→</span> 
-          <span style="color:#0d7de0;">Para:</span> ${escapeHtml(client.name||'—')}
+          <span style="color:#0d7de0;">De:</span> ${highlightText(issuer.name||'—', searchQuery)}
+          <span style="margin:0 8px;">→</span>
+          <span style="color:#0d7de0;">Para:</span> ${highlightText(client.name||'—', searchQuery)}
         </div>
         <div class="meta">
-          📅 ${formatDateISOtoLocal(q.createdAt)} • 
+          📅 ${formatDateISOtoLocal(q.createdAt)} •
           💰 R$ ${money(q.total)}
         </div>
       </div>
@@ -253,7 +374,7 @@ function renderQuotes(){
       </div>`;
     quotesList.appendChild(li);
   });
-  
+
   attachQuoteListListeners();
 }
 
@@ -744,7 +865,23 @@ if (cancelEditBtn) {
   });
 }
 
-// ========== PREVIEW & PRINT ==========
+// ========== FILTRO DE ORÇAMENTOS — EVENT LISTENERS ==========
+if (quotesSearch) {
+  quotesSearch.addEventListener('input', () => {
+    searchQuery = quotesSearch.value;
+    if (clearSearch) clearSearch.style.display = searchQuery.length > 0 ? '' : 'none';
+    renderQuotes();
+  });
+}
+
+if (clearSearch) {
+  clearSearch.addEventListener('click', () => {
+    searchQuery = '';
+    if (quotesSearch) quotesSearch.value = '';
+    clearSearch.style.display = 'none';
+    renderQuotes();
+  });
+}
 function openPreview(id){
   const q = store.quotes.find(x=>x.id===id); 
   if (!q) {
