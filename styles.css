@@ -175,6 +175,20 @@ body{
   color:#1a1a1a;
 }
 
+/* Logo section — above the two-column layout */
+.logo-section{
+  margin-bottom:20px;
+  padding-bottom:16px;
+  border-bottom:1px solid #e5e7eb;
+}
+.logo-section label{
+  display:block;
+  font-size:14px;
+  font-weight:600;
+  color:#374151;
+  margin-bottom:8px;
+}
+
 /* Two column layout */
 .two-col{
   display:grid;
