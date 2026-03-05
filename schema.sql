@@ -4,6 +4,22 @@
 -- Permite gerar UUIDs
 create extension if not exists "pgcrypto";
 
+-- Tabela de perfis de usuário (para lookup por username)
+create table if not exists profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  email text not null,
+  username text unique,
+  full_name text,
+  created_at timestamptz default now()
+);
+
+alter table profiles enable row level security;
+-- Permite leitura pública de email/username (necessário para login por username)
+create policy "Allow public select on profiles" on profiles for select using (true);
+-- Permite que o próprio usuário gerencie seu perfil
+create policy "Allow insert own profile" on profiles for insert with check (auth.uid() = id);
+create policy "Allow update own profile" on profiles for update using (auth.uid() = id);
+
 -- Tabela de emissores
 create table if not exists issuers (
   id uuid primary key default gen_random_uuid(),

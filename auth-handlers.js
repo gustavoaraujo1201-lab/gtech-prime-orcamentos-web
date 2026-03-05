@@ -89,17 +89,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Login com Email/Senha
+  // Login com Email/Senha ou Nome de Usuário
   if (loginForm) {
     loginForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       
-      const email = document.getElementById('loginEmail').value.trim();
+      const identifier = document.getElementById('loginIdentifier').value.trim();
       const password = document.getElementById('loginPassword').value;
 
-      console.log('[AUTH] Tentando login com email:', email);
+      console.log('[AUTH] Tentando login com identificador:', identifier);
 
-      if (!email || !password) {
+      if (!identifier || !password) {
         showMessage('Preencha todos os campos', 'error');
         return;
       }
@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       showMessage('🔄 Entrando...', 'info');
 
-      const result = await window.authManager.signIn(email, password);
+      const result = await window.authManager.signIn(identifier, password);
       
       if (result.success) {
         showMessage(result.message, 'success');
@@ -129,18 +129,25 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       
       const name = document.getElementById('signupName').value.trim();
+      const username = document.getElementById('signupUsername').value.trim();
       const email = document.getElementById('signupEmail').value.trim();
       const password = document.getElementById('signupPassword').value;
 
-      console.log('[AUTH] Tentando cadastro:', { name, email });
+      console.log('[AUTH] Tentando cadastro:', { name, username, email });
 
-      if (!name || !email || !password) {
+      if (!name || !username || !email || !password) {
         showMessage('Preencha todos os campos', 'error');
         return;
       }
 
       if (password.length < 6) {
         showMessage('A senha deve ter no mínimo 6 caracteres', 'error');
+        return;
+      }
+
+      const normalizedUsername = username.toLowerCase().replace(/\s+/g, '');
+      if (normalizedUsername.length < 3 || normalizedUsername.length > 30 || !/^[a-z0-9_-]+$/.test(normalizedUsername)) {
+        showMessage('O nome de usuário deve ter entre 3 e 30 caracteres e conter apenas letras, números, _ e -', 'error');
         return;
       }
 
@@ -152,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       showMessage('🔄 Criando conta...', 'info');
 
-      const result = await window.authManager.signUp(email, password, name);
+      const result = await window.authManager.signUp(email, password, name, username);
       
       if (result.success) {
         showMessage(result.message, 'success');
@@ -172,15 +179,22 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       e.stopPropagation();
       
-      const email = document.getElementById('loginEmail').value.trim();
+      const identifier = document.getElementById('loginIdentifier').value.trim();
       
-      if (!email) {
+      if (!identifier) {
         showMessage('Digite seu email no campo acima primeiro', 'error');
-        document.getElementById('loginEmail').focus();
+        document.getElementById('loginIdentifier').focus();
         return;
       }
 
-      if (!confirm(`Enviar email de recuperação para ${email}?`)) return;
+      // Se for username em vez de email, avisa o usuário para digitar o email
+      if (!identifier.includes('@')) {
+        showMessage('Para recuperar a senha, informe seu email no campo acima', 'error');
+        document.getElementById('loginIdentifier').focus();
+        return;
+      }
+
+      if (!confirm(`Enviar email de recuperação para ${identifier}?`)) return;
 
       if (!window.authManager) {
         showMessage('Sistema de autenticação não inicializado.', 'error');
@@ -189,7 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       showMessage('🔄 Enviando email...', 'info');
 
-      const result = await window.authManager.resetPassword(email);
+      const result = await window.authManager.resetPassword(identifier);
       
       if (result.success) {
         showMessage(result.message, 'success');
