@@ -272,8 +272,9 @@
     <div id="cadastroForm" class="form-container">
       <form onsubmit="handleSignUp(event)">
         <div class="form-group">
-          <label>Nome Completo</label>
-          <input type="text" id="signupName" placeholder="Seu nome completo" autocomplete="name" required>
+          <label>Nome de Usuário</label>
+          <input type="text" id="signupUsername" placeholder="ex: joaosilva123 (sem espaços)" autocomplete="off" pattern="[a-zA-Z0-9_]+" title="Apenas letras, números e underscore" minlength="3" required>
+          <small style="color: rgba(255,255,255,0.5); font-size: 11px;">Será usado para fazer login. Apenas letras, números e _.</small>
         </div>
         <div class="form-group">
           <label>Email</label>
@@ -385,13 +386,13 @@
     async function handleSignUp(event) {
       event.preventDefault();
       hideAlert();
-      const name = document.getElementById('signupName').value.trim();
+      const username = document.getElementById('signupUsername').value.trim();
       const email = document.getElementById('signupEmail').value.trim();
       const password = document.getElementById('signupPassword').value;
       const btn = document.getElementById('signupBtn');
       btn.disabled = true;
       btn.innerHTML = '<span class="loading"></span> Criando conta...';
-      const result = await window.authManager.signUp(email, password, name);
+      const result = await window.authManager.signUp(email, password, username);
       if (result.success) {
         showAlert('✅ Conta criada! Faça login agora.', 'success');
         setTimeout(() => {

@@ -89,9 +89,20 @@ class AuthManager {
 
     const userNameEl = document.getElementById('userName');
     if (userNameEl && this.currentUser) {
-      const displayName = this.currentUser.user_metadata?.full_name ||
-                          this.currentUser.email.split('@')[0];
-      userNameEl.textContent = displayName;
+      // Buscar username do perfil
+      this.supabase
+        .from('profiles')
+        .select('username, full_name')
+        .eq('id', this.currentUser.id)
+        .single()
+        .then(({ data: profile }) => {
+          const displayName = profile?.username || profile?.full_name ||
+                              this.currentUser.email.split('@')[0];
+          userNameEl.textContent = displayName;
+        })
+        .catch(() => {
+          userNameEl.textContent = this.currentUser.email.split('@')[0];
+        });
     }
 
     if (typeof renderAll === 'function') {
@@ -102,10 +113,29 @@ class AuthManager {
     console.log('✅ App carregado para:', this.currentUser?.email);
   }
 
-  async signUp(email, password, fullName) {
+  async signUp(email, password, username) {
     try {
       if (!this.supabase) {
         return { success: false, message: '❌ Sistema não inicializado. Recarregue a página.' };
+      }
+
+      // Validar formato do username
+      if (!username || username.length < 3) {
+        return { success: false, message: '❌ Nome de usuário deve ter pelo menos 3 caracteres.' };
+      }
+      if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+        return { success: false, message: '❌ Nome de usuário pode conter apenas letras, números e _' };
+      }
+
+      // Verificar se username já existe
+      const { data: existingUser } = await this.supabase
+        .from('profiles')
+        .select('id')
+        .eq('username', username.toLowerCase())
+        .maybeSingle();
+
+      if (existingUser) {
+        return { success: false, message: '❌ Este nome de usuário já está em uso. Escolha outro.' };
       }
 
       console.log('🔄 Cadastrando usuário:', email);
@@ -114,20 +144,20 @@ class AuthManager {
         email,
         password,
         options: {
-          data: { full_name: fullName }
+          data: { username: username.toLowerCase() }
         }
       });
 
       if (error) throw error;
 
-      // Salvar full_name na tabela de perfis
+      // Salvar username na tabela de perfis
       if (data.user) {
         const { error: profileError } = await this.supabase
           .from('profiles')
           .upsert({
             id: data.user.id,
             email,
-            full_name: fullName,
+            username: username.toLowerCase(),
             updated_at: new Date().toISOString()
           });
         if (profileError) {
@@ -158,13 +188,13 @@ class AuthManager {
 
       let email = identifier;
 
-      // Se não contém '@', trata como nome completo e busca o email correspondente
+      // Se não contém '@', trata como username e busca o email correspondente
       if (!identifier.includes('@')) {
-        console.log('🔄 Buscando email por nome completo:', identifier);
+        console.log('🔄 Buscando email por username:', identifier.toLowerCase());
         const { data: profile, error: profileError } = await this.supabase
           .from('profiles')
           .select('email')
-          .ilike('full_name', identifier)
+          .eq('username', identifier.toLowerCase())
           .maybeSingle();
 
         if (profileError) {
@@ -172,7 +202,7 @@ class AuthManager {
         }
 
         if (!profile) {
-          return { success: false, message: '❌ Usuário não encontrado. Verifique seu email ou nome.' };
+          return { success: false, message: '❌ Usuário não encontrado. Verifique seu email ou nome de usuário.' };
         }
 
         email = profile.email;
