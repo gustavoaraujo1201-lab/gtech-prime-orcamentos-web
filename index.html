@@ -874,7 +874,7 @@
     display:none; position:fixed; z-index:9998;
     background:#1f2937; border:1px solid rgba(255,255,255,0.10);
     border-radius:12px; box-shadow:0 8px 32px rgba(0,0,0,0.45);
-    min-width:220px; overflow:hidden;
+    overflow:hidden;
     animation: dropIn 0.18s cubic-bezier(0.22,1,0.36,1) both;
   ">
     <style>
@@ -1271,12 +1271,13 @@
         // Posiciona o dropdown alinhado abaixo do botão
         const rect = profileBtn.getBoundingClientRect();
         const isMobile = window.innerWidth <= 600;
-        profileDropdown.style.top  = (rect.bottom + 6) + 'px';
-        profileDropdown.style.left = 'auto';
+        profileDropdown.style.top   = (rect.bottom + 6) + 'px';
+        profileDropdown.style.width = rect.width + 'px';
+        profileDropdown.style.right = 'auto';
         if (isMobile) {
-          profileDropdown.style.right = '12px';
+          profileDropdown.style.left = (window.innerWidth - rect.width - 12) + 'px';
         } else {
-          profileDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+          profileDropdown.style.left = rect.left + 'px';
         }
       }
     });
