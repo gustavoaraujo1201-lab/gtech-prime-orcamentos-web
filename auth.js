@@ -245,6 +245,9 @@ class AuthManager {
       if (error) throw error;
 
       console.log('✅ Login realizado');
+      // Redireciona diretamente para o app após login
+      this._redirecting = true;
+      window.location.replace('/index');
       return { success: true, message: '✅ Login realizado com sucesso!' };
 
     } catch (error) {

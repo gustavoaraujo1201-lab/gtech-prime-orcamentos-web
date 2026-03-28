@@ -1,14 +1,11 @@
 [build]
   publish = "."
 
-# Raiz → login
 [[redirects]]
   from = "/"
   to = "/login.html"
   status = 302
-  force = true
 
-# URLs limpas — servem o arquivo sem mudar URL (vem ANTES dos 301)
 [[redirects]]
   from = "/login"
   to = "/login.html"
@@ -18,17 +15,6 @@
   from = "/index"
   to = "/index.html"
   status = 200
-
-# Remove .html se alguém digitar direto
-[[redirects]]
-  from = "/login.html"
-  to = "/login"
-  status = 301
-
-[[redirects]]
-  from = "/index.html"
-  to = "/index"
-  status = 301
 
 [[headers]]
   for = "/*"
