@@ -41,7 +41,16 @@ class AuthManager {
 
       if (session) {
         this.currentUser = session.user;
-        this.showApp();
+        const path = window.location.pathname;
+        const isLoginPage = path.endsWith('login.html') || path === '/login' || path === '/login/' || path === '/';
+        if (isLoginPage) {
+          // Estava no login com sessão ativa → vai para o app
+          this._redirecting = true;
+          window.location.replace('/index');
+        } else {
+          // Já está no app → só atualiza a UI
+          this.showApp();
+        }
       } else {
         this.showAuth();
       }
@@ -51,7 +60,13 @@ class AuthManager {
         console.log('🔔 Auth event:', event);
         if (event === 'SIGNED_IN') {
           this.currentUser = session.user;
-          this.showApp();
+          // Só redireciona se está na página de login
+          const path = window.location.pathname;
+          const isLoginPage = path.endsWith('login.html') || path === '/login' || path === '/login/' || path === '/';
+          if (isLoginPage && !this._redirecting) {
+            this._redirecting = true;
+            window.location.replace('/index');
+          }
         } else if (event === 'SIGNED_OUT') {
           this.currentUser = null;
           this._redirecting = false;
