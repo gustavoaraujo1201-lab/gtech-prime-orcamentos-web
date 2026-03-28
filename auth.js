@@ -37,6 +37,7 @@ class AuthManager {
       if (error) console.error('❌ Erro ao verificar sessão:', error.message);
 
       this._initialized = true;
+      this._redirecting = false;
 
       if (session) {
         this.currentUser = session.user;
@@ -49,15 +50,11 @@ class AuthManager {
       this.supabase.auth.onAuthStateChange((event, session) => {
         console.log('🔔 Auth event:', event);
         if (event === 'SIGNED_IN') {
-          // Evita loop: só age se não tinha usuário antes
-          if (!this.currentUser) {
-            this.currentUser = session.user;
-            this.showApp();
-          } else {
-            this.currentUser = session.user;
-          }
+          this.currentUser = session.user;
+          this.showApp();
         } else if (event === 'SIGNED_OUT') {
           this.currentUser = null;
+          this._redirecting = false;
           this.showAuth();
         }
       });
@@ -68,27 +65,28 @@ class AuthManager {
   }
 
   showAuth() {
+    if (this._redirecting) return;
     const path = window.location.pathname;
-    const isLoginPage = path.endsWith('login.html') || path === '/login' || path === '/login/';
-    const isRoot = path === '/';
-    if (!isLoginPage && !isRoot) {
+    const isLoginPage = path.endsWith('login.html') || path === '/login' || path === '/login/' || path === '/';
+    if (!isLoginPage) {
+      this._redirecting = true;
       window.location.replace('/login');
     }
-    // Já está no login — não redireciona
   }
 
   showApp() {
+    if (this._redirecting) return;
     const path = window.location.pathname;
     const isLoginPage = path.endsWith('login.html') || path === '/login' || path === '/login/' || path === '/';
     const isAppPage = path.endsWith('index.html') || path === '/index' || path === '/index/';
 
     if (isLoginPage) {
-      // Só redireciona se realmente está na tela de login
+      this._redirecting = true;
       window.location.replace('/index');
       return;
     }
 
-    // Já está no app — apenas atualiza UI
+    // Já está no app — só atualiza UI, NUNCA redireciona
     if (!isAppPage) return;
 
     const userNameEl = document.getElementById('userName');
@@ -259,7 +257,7 @@ class AuthManager {
   async resetPassword(email) {
     try {
       const { error } = await this.supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/login`
+        redirectTo: `${window.location.origin}/login.html`
       });
       if (error) throw error;
       return { success: true, message: '✅ Email de recuperação enviado!' };
