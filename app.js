@@ -748,30 +748,56 @@ if (closePreview) {
   closePreview.addEventListener("click", ()=> { previewModal && previewModal.classList.add("hidden"); });
 }
 
+// ========== IMPRESSÃO CENTRALIZADA (desktop + mobile) ==========
+function triggerPrint(bodyHtml, title) {
+  const css = getPrintCss();
+  const fullHtml = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${title || 'Orçamento - SoftPrime'}</title>
+  <style>${css}</style>
+</head>
+<body>${bodyHtml}</body>
+</html>`;
+  try {
+    let iframe = document.getElementById('_softprime_print_frame');
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.id = '_softprime_print_frame';
+      iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none;visibility:hidden;';
+      document.body.appendChild(iframe);
+    }
+    const doc = iframe.contentWindow.document;
+    doc.open(); doc.write(fullHtml); doc.close();
+    const imgs = Array.from(doc.images);
+    const pending = imgs.filter(i => !i.complete);
+    const doprint = () => { iframe.contentWindow.focus(); iframe.contentWindow.print(); };
+    if (pending.length === 0) { setTimeout(doprint, 400); return; }
+    let done = 0;
+    pending.forEach(img => {
+      img.addEventListener('load',  () => { done++; if (done === pending.length) setTimeout(doprint, 300); });
+      img.addEventListener('error', () => { done++; if (done === pending.length) setTimeout(doprint, 300); });
+    });
+  } catch(e) {
+    try {
+      const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.target = '_blank'; a.rel = 'noopener';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 15000);
+    } catch(e2) { showNotification("Não foi possível abrir a impressão. Tente pelo computador.", "error"); }
+  }
+}
+
 if (printBtn) {
   printBtn.addEventListener("click", ()=>{
     try {
       const content = previewArea ? previewArea.innerHTML : "";
-      const printStyle = `*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;}body{font-family:Arial,Helvetica,sans-serif;padding:16px;color:#1a1a1a;max-width:760px;margin:0 auto;font-size:13px;}table{width:100%;border-collapse:collapse;}th,td{vertical-align:top;}img{max-width:100%;height:auto;}@media print{body{padding:8px;}@page{margin:1.2cm;size:A4 portrait;}}`;
-      let iframe = document.getElementById('_print_iframe');
-      if (!iframe) {
-        iframe = document.createElement('iframe');
-        iframe.id = '_print_iframe';
-        iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:800px;height:600px;border:none;';
-        document.body.appendChild(iframe);
-      }
-      const doc = iframe.contentWindow.document;
-      doc.open();
-      doc.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Orçamento - SoftPrime</title><style>${printStyle}</style></head><body>${content}</body></html>`);
-      doc.close();
-      setTimeout(() => {
-        try { iframe.contentWindow.focus(); iframe.contentWindow.print(); }
-        catch(e) {
-          const blob = new Blob([`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${printStyle}</style></head><body>${content}</body></html>`], {type:'text/html'});
-          const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.click();
-          setTimeout(() => URL.revokeObjectURL(url), 10000);
-        }
-      }, 500);
+      if (!content) { showNotification("Nenhum conteúdo para imprimir.", "info"); return; }
+      triggerPrint(content, "Orçamento - SoftPrime");
     } catch (err) {
       console.error("[ERROR] printBtn:", err);
       showNotification("Erro ao imprimir. Tente novamente.", "error");
@@ -977,122 +1003,204 @@ function exportQuotePdf(quoteId){
     const issuer = store.issuers.find(i=>i.id===q.issuerId)||{};
     const client = store.clients.find(c=>c.id===q.clientId)||{};
     const html = renderQuoteHtml(q, issuer, client);
-    const pdfStyle = `*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;}body{font-family:Arial,Helvetica,sans-serif;padding:16px;color:#1a1a1a;max-width:760px;margin:0 auto;font-size:13px;}table{width:100%;border-collapse:collapse;}th,td{vertical-align:top;}img{max-width:100%;height:auto;}@media print{body{padding:8px;}@page{margin:1.2cm;size:A4 portrait;}}`;
-    const fullHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Orçamento ${escapeHtml(q.numero||q.id)}</title><style>${pdfStyle}</style></head><body>${html}</body></html>`;
-    let iframe = document.getElementById('_print_iframe');
-    if (!iframe) {
-      iframe = document.createElement('iframe');
-      iframe.id = '_print_iframe';
-      iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:800px;height:600px;border:none;';
-      document.body.appendChild(iframe);
-    }
-    const doc = iframe.contentWindow.document;
-    doc.open(); doc.write(fullHtml); doc.close();
-    setTimeout(() => {
-      try { iframe.contentWindow.focus(); iframe.contentWindow.print(); }
-      catch(e) {
-        const blob = new Blob([fullHtml], {type:'text/html'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.click();
-        setTimeout(() => URL.revokeObjectURL(url), 10000);
-      }
-    }, 500);
+    triggerPrint(html, `Orçamento ${escapeHtml(q.numero||q.id)}`);
   } catch (err) { console.error("[ERROR] exportQuotePdf:", err); showNotification("Erro ao exportar PDF", "error"); }
+}
+
+// ========== CSS DE IMPRESSÃO DEFINITIVO (desktop + mobile) ==========
+function getPrintCss() {
+  return `
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 13px;
+      color: #1a1a1a;
+      background: #fff;
+      padding: 24px;
+      max-width: 780px;
+      margin: 0 auto;
+    }
+    table { border-collapse: collapse; width: 100%; }
+    img { max-width: 100%; height: auto; display: block; }
+
+    /* Garante que cores e fundos apareçam na impressão */
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+    .q-logo    { text-align: center; margin-bottom: 20px; }
+    .q-logo img { max-height: 90px; max-width: 240px; margin: 0 auto; }
+
+    .q-title   { text-align: center; margin-bottom: 24px; }
+    .q-title-main { font-size: 22px; font-weight: 800; color: #0d7de0; letter-spacing: 2px; }
+    .q-title-num  { font-size: 15px; font-weight: 600; color: #1a1a1a; margin-top: 5px; }
+
+    /* Emissor / Destinatário lado a lado via TABLE */
+    .q-parties { width: 100%; margin-bottom: 24px; }
+    .q-parties td { vertical-align: top; }
+    .q-box {
+      padding: 12px 14px;
+      background: #f9fafb;
+      border: 1px solid #d1d5db;
+    }
+    .q-box-label {
+      font-size: 9px; font-weight: 800; color: #0d7de0;
+      letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 7px;
+    }
+    .q-box-name  { font-size: 14px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
+    .q-box-info  { font-size: 11px; color: #4b5563; line-height: 1.6; }
+    .q-box-cnpj  { font-size: 11px; color: #6b7280; margin-bottom: 2px; }
+
+    /* Tabela de itens */
+    .q-items { margin-bottom: 0; }
+    .q-items th {
+      background: #f3f4f6;
+      border: 1px solid #d1d5db;
+      padding: 9px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #374151;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .q-items td {
+      border: 1px solid #d1d5db;
+      padding: 9px 10px;
+      font-size: 13px;
+      color: #1a1a1a;
+      vertical-align: middle;
+    }
+    .q-items .col-desc  { text-align: left; word-break: break-word; }
+    .q-items .col-qtd   { text-align: center; white-space: nowrap; width: 8%; }
+    .q-items .col-unit  { text-align: right;  white-space: nowrap; width: 18%; }
+    .q-items .col-total { text-align: right;  white-space: nowrap; width: 18%; font-weight: 700; }
+
+    /* Linha do TOTAL */
+    .q-total-row td {
+      border: 1px solid #d1d5db;
+      border-top: 2px solid #0d7de0;
+      padding: 10px 10px;
+      font-weight: 800;
+      color: #0d7de0;
+      font-size: 14px;
+    }
+    .q-total-label { text-align: right; }
+    .q-total-value { text-align: right; white-space: nowrap; width: 18%; }
+
+    /* Observações */
+    .q-notes {
+      margin-top: 20px;
+      padding: 12px 14px;
+      background: #fffbeb;
+      border-left: 4px solid #f59e0b;
+    }
+    .q-notes strong { color: #92400e; font-size: 12px; }
+    .q-notes p { color: #78350f; font-size: 12px; margin-top: 6px; white-space: pre-wrap; }
+
+    /* Assinatura */
+    .q-signature {
+      margin-top: 120px;
+      margin-bottom: 32px;
+      text-align: center;
+      page-break-inside: avoid;
+    }
+    .q-sig-line {
+      width: 55%;
+      border-top: 1.5px solid #1a1a1a;
+      margin: 0 auto 10px;
+    }
+    .q-sig-name { font-size: 13px; font-weight: 700; color: #1a1a1a; }
+
+    /* Rodapé */
+    .q-footer { text-align: center; font-size: 10px; color: #9ca3af; margin-top: 12px; }
+
+    /* === IMPRESSÃO === */
+    @media print {
+      body { padding: 0; }
+      @page { margin: 1.5cm; size: A4 portrait; }
+    }
+  `;
 }
 
 function renderQuoteHtml(q, issuer, client){
   const dateOnly = formatDateISOtoLocal(q.createdAt);
+
   const logoHtml = issuer.logo
-    ? `<div style="text-align:center;margin-bottom:20px;"><img src="${issuer.logo}" alt="Logo" style="max-height:100px;max-width:260px;object-fit:contain;" /></div>`
+    ? `<div class="q-logo"><img src="${issuer.logo}" alt="Logo" /></div>`
     : '';
-
-  const issuerBlock = `
-    <div style="font-size:10px;font-weight:700;color:#0d7de0;letter-spacing:1px;margin-bottom:8px;">EMISSOR</div>
-    <div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:4px;">${escapeHtml(issuer.name||'—')}</div>
-    ${issuer.cnpjCpf ? `<div style="font-size:12px;color:#6b7280;margin-bottom:2px;">CNPJ/CPF: ${escapeHtml(issuer.cnpjCpf)}</div>` : ''}
-    ${issuer.address  ? `<div style="font-size:12px;color:#4b5563;margin-bottom:2px;">${escapeHtml(issuer.address)}</div>` : ''}
-    ${issuer.phone    ? `<div style="font-size:12px;color:#4b5563;">Tel: ${escapeHtml(issuer.phone)}</div>` : ''}
-  `;
-
-  const clientBlock = `
-    <div style="font-size:10px;font-weight:700;color:#0d7de0;letter-spacing:1px;margin-bottom:8px;">DESTINATÁRIO</div>
-    <div style="font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:4px;">${escapeHtml(client.name||'—')}</div>
-    ${client.cnpjCpf ? `<div style="font-size:12px;color:#6b7280;margin-bottom:2px;">CNPJ/CPF: ${escapeHtml(client.cnpjCpf)}</div>` : ''}
-    ${client.address  ? `<div style="font-size:12px;color:#4b5563;margin-bottom:2px;">${escapeHtml(client.address)}</div>` : ''}
-    ${client.phone    ? `<div style="font-size:12px;color:#4b5563;">Tel: ${escapeHtml(client.phone)}</div>` : ''}
-  `;
 
   const itemRows = q.items.map(it => `
     <tr>
-      <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;word-break:break-word;font-size:13px;">${escapeHtml(it.descricao||'')}</td>
-      <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;text-align:center;white-space:nowrap;font-size:13px;">${it.quantidade}</td>
-      <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;text-align:right;white-space:nowrap;font-size:13px;">R$ ${money(it.valorUnitario)}</td>
-      <td style="padding:10px 8px;border-bottom:1px solid #e5e7eb;text-align:right;white-space:nowrap;font-size:13px;font-weight:700;">R$ ${money((it.quantidade||0)*(it.valorUnitario||0))}</td>
+      <td class="col-desc">${escapeHtml(it.descricao||'')}</td>
+      <td class="col-qtd">${escapeHtml(String(it.quantidade))}</td>
+      <td class="col-unit">R$ ${money(it.valorUnitario)}</td>
+      <td class="col-total">R$ ${money((it.quantidade||0)*(it.valorUnitario||0))}</td>
     </tr>`).join('');
 
   const notesHtml = q.notes ? `
-    <div style="margin-top:20px;padding:14px;background:#fffbeb;border-left:4px solid #f59e0b;border-radius:4px;">
-      <strong style="color:#92400e;font-size:13px;">Observações:</strong>
-      <div style="margin-top:6px;color:#78350f;font-size:13px;white-space:pre-wrap;">${escapeHtml(q.notes)}</div>
+    <div class="q-notes">
+      <strong>Observações:</strong>
+      <p>${escapeHtml(q.notes)}</p>
     </div>` : '';
 
   return `
-    <div style="font-family:Arial,Helvetica,sans-serif;max-width:760px;margin:0 auto;padding:16px;color:#1a1a1a;">
+    ${logoHtml}
 
-      ${logoHtml}
-
-      <div style="text-align:center;margin-bottom:24px;">
-        <div style="font-size:24px;font-weight:800;color:#0d7de0;letter-spacing:2px;">ORÇAMENTO</div>
-        <div style="font-size:17px;font-weight:600;margin-top:6px;">${escapeHtml(q.numero || q.id)}</div>
-      </div>
-
-      <!-- EMISSOR + DESTINATÁRIO via TABLE (funciona em print mobile) -->
-      <table style="width:100%;border-collapse:collapse;margin-bottom:24px;" cellspacing="0" cellpadding="0">
-        <tr>
-          <td style="width:49%;padding:14px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;vertical-align:top;">
-            ${issuerBlock}
-          </td>
-          <td style="width:2%;"></td>
-          <td style="width:49%;padding:14px;background:#f9fafb;border:1px solid #e5e7eb;border-radius:6px;vertical-align:top;">
-            ${clientBlock}
-          </td>
-        </tr>
-      </table>
-
-      <!-- ITENS -->
-      <table style="width:100%;border-collapse:collapse;margin-bottom:0;">
-        <thead>
-          <tr style="background:#f3f4f6;">
-            <th style="padding:10px 8px;text-align:left;font-size:12px;font-weight:700;color:#374151;border-bottom:2px solid #e5e7eb;word-break:break-word;">Descrição</th>
-            <th style="padding:10px 8px;text-align:center;font-size:12px;font-weight:700;color:#374151;border-bottom:2px solid #e5e7eb;white-space:nowrap;width:8%;">Qtd</th>
-            <th style="padding:10px 8px;text-align:right;font-size:12px;font-weight:700;color:#374151;border-bottom:2px solid #e5e7eb;white-space:nowrap;width:20%;">Valor Unit.</th>
-            <th style="padding:10px 8px;text-align:right;font-size:12px;font-weight:700;color:#374151;border-bottom:2px solid #e5e7eb;white-space:nowrap;width:20%;">Total</th>
-          </tr>
-        </thead>
-        <tbody>${itemRows}</tbody>
-      </table>
-
-      <!-- TOTAL -->
-      <table style="width:100%;border-collapse:collapse;margin-bottom:20px;">
-        <tr>
-          <td style="padding:12px 8px;text-align:right;font-weight:700;font-size:15px;color:#0d7de0;border-top:2px solid #0d7de0;" colspan="3">TOTAL:</td>
-          <td style="padding:12px 8px;text-align:right;font-weight:800;font-size:16px;color:#0d7de0;border-top:2px solid #0d7de0;white-space:nowrap;width:20%;">R$ ${money(q.total)}</td>
-        </tr>
-      </table>
-
-      ${notesHtml}
-
-      <!-- ASSINATURA -->
-      <div style="margin-top:80px;margin-bottom:30px;text-align:center;">
-        <div style="width:55%;border-top:1.5px solid #1a1a1a;margin:0 auto;"></div>
-        <div style="font-weight:700;font-size:13px;margin-top:8px;">${escapeHtml(issuer.name||'')}</div>
-      </div>
-
-      <div style="text-align:center;font-size:11px;color:#9ca3af;margin-top:16px;">
-        Orçamento gerado em: ${escapeHtml(dateOnly)}
-      </div>
-
+    <div class="q-title">
+      <div class="q-title-main">ORÇAMENTO</div>
+      <div class="q-title-num">${escapeHtml(q.numero || q.id)}</div>
     </div>
+
+    <table class="q-parties" cellspacing="0" cellpadding="0">
+      <tr>
+        <td width="49%">
+          <div class="q-box">
+            <div class="q-box-label">Emissor</div>
+            <div class="q-box-name">${escapeHtml(issuer.name||'—')}</div>
+            ${issuer.cnpjCpf ? `<div class="q-box-cnpj">CNPJ/CPF: ${escapeHtml(issuer.cnpjCpf)}</div>` : ''}
+            <div class="q-box-info">
+              ${issuer.address ? escapeHtml(issuer.address)+'<br/>' : ''}
+              ${issuer.phone   ? 'Tel: '+escapeHtml(issuer.phone) : ''}
+            </div>
+          </div>
+        </td>
+        <td width="2%"></td>
+        <td width="49%">
+          <div class="q-box">
+            <div class="q-box-label">Destinatário</div>
+            <div class="q-box-name">${escapeHtml(client.name||'—')}</div>
+            ${client.cnpjCpf ? `<div class="q-box-cnpj">CNPJ/CPF: ${escapeHtml(client.cnpjCpf)}</div>` : ''}
+            <div class="q-box-info">
+              ${client.address ? escapeHtml(client.address)+'<br/>' : ''}
+              ${client.phone   ? 'Tel: '+escapeHtml(client.phone) : ''}
+            </div>
+          </div>
+        </td>
+      </tr>
+    </table>
+
+    <table class="q-items">
+      <thead>
+        <tr>
+          <th class="col-desc">Descrição</th>
+          <th class="col-qtd">Qtd</th>
+          <th class="col-unit">Valor Unit.</th>
+          <th class="col-total">Total</th>
+        </tr>
+      </thead>
+      <tbody>${itemRows}</tbody>
+      <tr class="q-total-row">
+        <td colspan="3" class="q-total-label">TOTAL:</td>
+        <td class="q-total-value">R$ ${money(q.total)}</td>
+      </tr>
+    </table>
+
+    ${notesHtml}
+
+    <div class="q-signature">
+      <div class="q-sig-line"></div>
+      <div class="q-sig-name">${escapeHtml(issuer.name||'')}</div>
+    </div>
+
+    <div class="q-footer">Orçamento gerado em: ${escapeHtml(dateOnly)}</div>
   `;
 }
 
