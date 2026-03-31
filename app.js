@@ -832,7 +832,6 @@ function exportQuoteDoc(quoteId){
       xmlns="http://www.w3.org/TR/REC-html40">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Orçamento ${escapeHtml(q.numero||q.id)}</title>
   <!--[if gte mso 9]><xml>
     <w:WordDocument>
@@ -857,8 +856,6 @@ function exportQuoteDoc(quoteId){
     table.items { width: 100%; border-collapse: collapse; margin-top: 10px; margin-bottom: 0; }
     table.items th { background: #f2f2f2; border: 1pt solid #cccccc; padding: 7px 10px; font-size: 10pt; font-weight: bold; }
     table.items td { border: 1pt solid #cccccc; padding: 7px 10px; font-size: 10pt; }
-    table.total-table { width: 100%; border-collapse: collapse; margin-top: 12px; margin-bottom: 10px; }
-    table.total-table td { border: 1pt solid #cccccc; padding: 9px 10px; background: #f2f2f2; }
     .th-desc  { text-align: left; width: 55%; }
     .th-qtd   { text-align: center; width: 10%; }
     .th-unit  { text-align: right; width: 17%; }
@@ -866,8 +863,10 @@ function exportQuoteDoc(quoteId){
     .td-center { text-align: center; }
     .td-right  { text-align: right; }
     .td-bold   { font-weight: bold; }
+    table.total-sep { width: 100%; border-collapse: collapse; margin-top: 14px; margin-bottom: 10px; }
+    table.total-sep td { border: 2pt solid #93c5fd; padding: 9px 10px; background: #eef6ff; }
     .total-label { text-align: right; font-weight: bold; color: #0d7de0; font-size: 11pt; }
-    .total-value { text-align: right; font-weight: bold; color: #0d7de0; font-size: 12pt; }
+    .total-value { text-align: right; font-weight: bold; color: #0d7de0; font-size: 12pt; white-space: nowrap; width: 22%; }
     .sig-block { text-align: center; margin-top: 160px; margin-bottom: 40px; }
     .sig-line-wrap { text-align: center; margin-bottom: 6px; }
     .sig-hr { width: 55%; border-top: 1.5pt solid #1a1a1a; display: inline-block; font-size: 0; line-height: 0; }
@@ -875,10 +874,9 @@ function exportQuoteDoc(quoteId){
     .footer { text-align: center; font-size: 9pt; color: #888888; margin-top: 16px; }
     @media screen and (max-width: 600px) {
       body { padding: 12px; font-size: 10pt; }
-      table.layout { display: block; }
       table.layout tr, table.layout td { display: block; width: 100% !important; }
       table.layout td:nth-child(2) { display: none; }
-      table.items, table.total-table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      table.items, table.total-sep { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
       .sig-block { margin-top: 60px; }
     }
   </style>
@@ -924,10 +922,10 @@ function exportQuoteDoc(quoteId){
     </tbody>
   </table>
 
-  <table class="total-table">
+  <table class="total-sep">
     <tr>
-      <td class="total-label" style="width:82%;">TOTAL:</td>
-      <td class="total-value" style="width:18%;text-align:right;">R$ ${money(q.total||0)}</td>
+      <td class="total-label">TOTAL:</td>
+      <td class="total-value">R$ ${money(q.total||0)}</td>
     </tr>
   </table>
 
@@ -960,11 +958,6 @@ function getPrintCss() {
     body{font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1a1a1a;background:#fff;padding:24px;max-width:780px;margin:0 auto;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
     table{border-collapse:collapse;width:100%;}
     img{max-width:100%;height:auto;display:block;}
-    @media screen and (max-width:600px){
-      body{padding:12px;}
-      table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;}
-      td,th{min-width:60px;}
-    }
     @media print{body{padding:0;}@page{margin:1.5cm;size:A4 portrait;}}
   `;
 }
@@ -1047,10 +1040,10 @@ function renderQuoteHtml(q, issuer, client){
 
   const itemRows = q.items.map(it => `
     <tr>
-      <td style="padding:10px 8px;border:1px solid #e5e7eb;word-break:break-word;font-size:13px;">${escapeHtml(it.descricao||'')}</td>
-      <td style="padding:10px 8px;border:1px solid #e5e7eb;text-align:center;white-space:nowrap;font-size:13px;">${it.quantidade}</td>
-      <td style="padding:10px 8px;border:1px solid #e5e7eb;text-align:right;white-space:nowrap;font-size:13px;">R$ ${money(it.valorUnitario)}</td>
-      <td style="padding:10px 8px;border:1px solid #e5e7eb;text-align:right;white-space:nowrap;font-size:13px;font-weight:700;">R$ ${money((it.quantidade||0)*(it.valorUnitario||0))}</td>
+      <td style="padding:10px 8px;border:1px solid #d1d5db;word-break:break-word;font-size:13px;">${escapeHtml(it.descricao||'')}</td>
+      <td style="padding:10px 8px;border:1px solid #d1d5db;text-align:center;white-space:nowrap;font-size:13px;">${it.quantidade}</td>
+      <td style="padding:10px 8px;border:1px solid #d1d5db;text-align:right;white-space:nowrap;font-size:13px;">R$ ${money(it.valorUnitario)}</td>
+      <td style="padding:10px 8px;border:1px solid #d1d5db;text-align:right;white-space:nowrap;font-size:13px;font-weight:700;">R$ ${money((it.quantidade||0)*(it.valorUnitario||0))}</td>
     </tr>`).join('');
 
   const notesHtml = q.notes ? `
@@ -1086,20 +1079,20 @@ function renderQuoteHtml(q, issuer, client){
       <table style="width:100%;border-collapse:collapse;margin-bottom:0;table-layout:auto;">
         <thead>
           <tr style="background:#f3f4f6;">
-            <th style="padding:10px 8px;text-align:left;font-size:12px;font-weight:700;color:#374151;border:1px solid #e5e7eb;border-bottom:2px solid #d1d5db;word-break:break-word;">Descrição</th>
-            <th style="padding:10px 8px;text-align:center;font-size:12px;font-weight:700;color:#374151;border:1px solid #e5e7eb;border-bottom:2px solid #d1d5db;white-space:nowrap;width:8%;">Qtd</th>
-            <th style="padding:10px 8px;text-align:right;font-size:12px;font-weight:700;color:#374151;border:1px solid #e5e7eb;border-bottom:2px solid #d1d5db;white-space:nowrap;width:20%;">Valor Unit.</th>
-            <th style="padding:10px 8px;text-align:right;font-size:12px;font-weight:700;color:#374151;border:1px solid #e5e7eb;border-bottom:2px solid #d1d5db;white-space:nowrap;width:20%;">Total</th>
+            <th style="padding:10px 8px;text-align:left;font-size:12px;font-weight:700;color:#374151;border:1px solid #d1d5db;word-break:break-word;">Descrição</th>
+            <th style="padding:10px 8px;text-align:center;font-size:12px;font-weight:700;color:#374151;border:1px solid #d1d5db;white-space:nowrap;width:8%;">Qtd</th>
+            <th style="padding:10px 8px;text-align:right;font-size:12px;font-weight:700;color:#374151;border:1px solid #d1d5db;white-space:nowrap;width:20%;">Valor Unit.</th>
+            <th style="padding:10px 8px;text-align:right;font-size:12px;font-weight:700;color:#374151;border:1px solid #d1d5db;white-space:nowrap;width:20%;">Total</th>
           </tr>
         </thead>
         <tbody>${itemRows}</tbody>
       </table>
 
-      <!-- TOTAL — tabela separada, abaixo da tabela de itens -->
-      <table style="width:100%;border-collapse:collapse;margin-top:12px;margin-bottom:20px;table-layout:auto;">
-        <tr>
-          <td style="padding:12px 8px;text-align:right;font-weight:700;font-size:15px;color:#0d7de0;border:1px solid #e5e7eb;background:#f3f4f6;">TOTAL:</td>
-          <td style="padding:12px 8px;text-align:right;font-weight:800;font-size:16px;color:#0d7de0;border:1px solid #e5e7eb;background:#f3f4f6;white-space:nowrap;width:20%;">R$ ${money(q.total)}</td>
+      <!-- TOTAL — tabela SEPARADA, com margem acima para criar distância visual -->
+      <table style="width:100%;border-collapse:collapse;margin-top:14px;margin-bottom:20px;table-layout:auto;">
+        <tr style="background:#eef6ff;">
+          <td style="padding:12px 10px;text-align:right;font-weight:700;font-size:14px;color:#0d7de0;border:2px solid #bfdbfe;">TOTAL:</td>
+          <td style="padding:12px 10px;text-align:right;font-weight:800;font-size:16px;color:#0d7de0;border:2px solid #bfdbfe;white-space:nowrap;width:20%;">R$ ${money(q.total)}</td>
         </tr>
       </table>
 
