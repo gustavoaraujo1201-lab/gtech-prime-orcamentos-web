@@ -748,50 +748,6 @@ if (closePreview) {
   closePreview.addEventListener("click", ()=> { previewModal && previewModal.classList.add("hidden"); });
 }
 
-// ========== IMPRESSÃO CENTRALIZADA (desktop + mobile) ==========
-function triggerPrint(bodyHtml, title) {
-  const css = getPrintCss();
-  const fullHtml = `<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>${title || 'Orçamento - SoftPrime'}</title>
-  <style>${css}</style>
-</head>
-<body>${bodyHtml}</body>
-</html>`;
-  try {
-    let iframe = document.getElementById('_softprime_print_frame');
-    if (!iframe) {
-      iframe = document.createElement('iframe');
-      iframe.id = '_softprime_print_frame';
-      iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none;visibility:hidden;';
-      document.body.appendChild(iframe);
-    }
-    const doc = iframe.contentWindow.document;
-    doc.open(); doc.write(fullHtml); doc.close();
-    const imgs = Array.from(doc.images);
-    const pending = imgs.filter(i => !i.complete);
-    const doprint = () => { iframe.contentWindow.focus(); iframe.contentWindow.print(); };
-    if (pending.length === 0) { setTimeout(doprint, 400); return; }
-    let done = 0;
-    pending.forEach(img => {
-      img.addEventListener('load',  () => { done++; if (done === pending.length) setTimeout(doprint, 300); });
-      img.addEventListener('error', () => { done++; if (done === pending.length) setTimeout(doprint, 300); });
-    });
-  } catch(e) {
-    try {
-      const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.target = '_blank'; a.rel = 'noopener';
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(url), 15000);
-    } catch(e2) { showNotification("Não foi possível abrir a impressão. Tente pelo computador.", "error"); }
-  }
-}
-
 if (printBtn) {
   printBtn.addEventListener("click", ()=>{
     try {
@@ -986,6 +942,49 @@ function exportQuoteDoc(quoteId){
   } catch (err) { console.error("[ERROR] exportQuoteDoc:", err); showNotification("Erro ao exportar documento", "error"); }
 }
 
+function triggerPrint(bodyHtml, title) {
+  const css = getPrintCss();
+  const fullHtml = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${title || 'Orçamento - SoftPrime'}</title>
+  <style>${css}</style>
+</head>
+<body>${bodyHtml}</body>
+</html>`;
+  try {
+    let iframe = document.getElementById('_softprime_print_frame');
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.id = '_softprime_print_frame';
+      iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none;visibility:hidden;';
+      document.body.appendChild(iframe);
+    }
+    const doc = iframe.contentWindow.document;
+    doc.open(); doc.write(fullHtml); doc.close();
+    const imgs = Array.from(doc.images);
+    const pending = imgs.filter(i => !i.complete);
+    const doprint = () => { iframe.contentWindow.focus(); iframe.contentWindow.print(); };
+    if (pending.length === 0) { setTimeout(doprint, 400); return; }
+    let done = 0;
+    pending.forEach(img => {
+      img.addEventListener('load',  () => { done++; if (done === pending.length) setTimeout(doprint, 300); });
+      img.addEventListener('error', () => { done++; if (done === pending.length) setTimeout(doprint, 300); });
+    });
+  } catch(e) {
+    try {
+      const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.target = '_blank'; a.rel = 'noopener';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 15000);
+    } catch(e2) { showNotification("Não foi possível abrir a impressão.", "error"); }
+  }
+}
+
 function printWindowWhenReady(w) {
   const allImgs = Array.from(w.document.images);
   if (allImgs.length === 0) { setTimeout(() => w.print(), 300); return; }
@@ -1007,98 +1006,87 @@ function exportQuotePdf(quoteId){
   } catch (err) { console.error("[ERROR] exportQuotePdf:", err); showNotification("Erro ao exportar PDF", "error"); }
 }
 
-// ========== CSS DE IMPRESSÃO DEFINITIVO (desktop + mobile) ==========
 function getPrintCss() {
   return `
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+    }
     body {
       font-family: Arial, Helvetica, sans-serif;
       font-size: 13px;
       color: #1a1a1a;
       background: #fff;
-      padding: 24px;
+      /* Espaço no fundo para o rodapé fixo não sobrepor conteúdo */
+      padding: 24px 24px 80px 24px;
       max-width: 780px;
       margin: 0 auto;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
     }
     table { border-collapse: collapse; width: 100%; }
-    img { max-width: 100%; height: auto; display: block; }
+    img   { max-width: 100%; height: auto; display: block; }
 
-    /* Garante que cores e fundos apareçam na impressão */
-    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-
-    .q-logo    { text-align: center; margin-bottom: 20px; }
-    .q-logo img { max-height: 90px; max-width: 240px; margin: 0 auto; }
-
-    .q-title   { text-align: center; margin-bottom: 24px; }
+    /* ---------- cabeçalho do orçamento ---------- */
+    .q-title      { text-align: center; margin-bottom: 22px; }
     .q-title-main { font-size: 22px; font-weight: 800; color: #0d7de0; letter-spacing: 2px; }
     .q-title-num  { font-size: 15px; font-weight: 600; color: #1a1a1a; margin-top: 5px; }
+    .q-logo       { text-align: center; margin-bottom: 18px; }
+    .q-logo img   { max-height: 90px; max-width: 240px; margin: 0 auto; }
 
-    /* Emissor / Destinatário lado a lado via TABLE */
-    .q-parties { width: 100%; margin-bottom: 24px; }
-    .q-parties td { vertical-align: top; }
+    /* ---------- boxes emissor / destinatário ---------- */
+    .q-parties { margin-bottom: 22px; }
     .q-box {
       padding: 12px 14px;
       background: #f9fafb;
       border: 1px solid #d1d5db;
+      vertical-align: top;
     }
-    .q-box-label {
-      font-size: 9px; font-weight: 800; color: #0d7de0;
-      letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 7px;
-    }
+    .q-box-label { font-size: 9px; font-weight: 800; color: #0d7de0; letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: 7px; }
     .q-box-name  { font-size: 14px; font-weight: 700; color: #1a1a1a; margin-bottom: 4px; }
-    .q-box-info  { font-size: 11px; color: #4b5563; line-height: 1.6; }
     .q-box-cnpj  { font-size: 11px; color: #6b7280; margin-bottom: 2px; }
+    .q-box-info  { font-size: 11px; color: #4b5563; line-height: 1.6; }
 
-    /* Tabela de itens */
-    .q-items { margin-bottom: 0; }
+    /* ---------- tabela de itens ---------- */
     .q-items th {
       background: #f3f4f6;
       border: 1px solid #d1d5db;
       padding: 9px 10px;
-      font-size: 11px;
-      font-weight: 700;
-      color: #374151;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
+      font-size: 11px; font-weight: 700; color: #374151;
+      text-transform: uppercase; letter-spacing: 0.3px;
     }
     .q-items td {
       border: 1px solid #d1d5db;
       padding: 9px 10px;
-      font-size: 13px;
-      color: #1a1a1a;
+      font-size: 13px; color: #1a1a1a;
       vertical-align: middle;
     }
-    .q-items .col-desc  { text-align: left; word-break: break-word; }
-    .q-items .col-qtd   { text-align: center; white-space: nowrap; width: 8%; }
-    .q-items .col-unit  { text-align: right;  white-space: nowrap; width: 18%; }
-    .q-items .col-total { text-align: right;  white-space: nowrap; width: 18%; font-weight: 700; }
+    .col-desc  { text-align: left;   word-break: break-word; }
+    .col-qtd   { text-align: center; white-space: nowrap; width: 8%;  }
+    .col-unit  { text-align: right;  white-space: nowrap; width: 18%; }
+    .col-total { text-align: right;  white-space: nowrap; width: 18%; font-weight: 700; }
 
-    /* Linha do TOTAL */
+    /* ---------- linha TOTAL ---------- */
     .q-total-row td {
       border: 1px solid #d1d5db;
       border-top: 2px solid #0d7de0;
       padding: 10px 10px;
-      font-weight: 800;
-      color: #0d7de0;
-      font-size: 14px;
+      font-weight: 800; color: #0d7de0; font-size: 14px;
     }
     .q-total-label { text-align: right; }
     .q-total-value { text-align: right; white-space: nowrap; width: 18%; }
 
-    /* Observações */
+    /* ---------- observações ---------- */
     .q-notes {
-      margin-top: 20px;
-      padding: 12px 14px;
-      background: #fffbeb;
-      border-left: 4px solid #f59e0b;
+      margin-top: 20px; padding: 12px 14px;
+      background: #fffbeb; border-left: 4px solid #f59e0b;
     }
-    .q-notes strong { color: #92400e; font-size: 12px; }
-    .q-notes p { color: #78350f; font-size: 12px; margin-top: 6px; white-space: pre-wrap; }
+    .q-notes strong { color: #92400e; font-size: 12px; display: block; margin-bottom: 6px; }
+    .q-notes p { color: #78350f; font-size: 12px; white-space: pre-wrap; }
 
-    /* Assinatura */
+    /* ---------- ASSINATURA — empurra para o fim da página ---------- */
     .q-signature {
-      margin-top: 120px;
-      margin-bottom: 32px;
+      margin-top: 200px;       /* empurra para baixo */
       text-align: center;
       page-break-inside: avoid;
     }
@@ -1109,13 +1097,21 @@ function getPrintCss() {
     }
     .q-sig-name { font-size: 13px; font-weight: 700; color: #1a1a1a; }
 
-    /* Rodapé */
-    .q-footer { text-align: center; font-size: 10px; color: #9ca3af; margin-top: 12px; }
+    /* ---------- RODAPÉ FIXO (data no fundo da página) ---------- */
+    .q-footer {
+      position: fixed;
+      bottom: 16px;
+      left: 0; right: 0;
+      text-align: center;
+      font-size: 10px;
+      color: #9ca3af;
+    }
 
-    /* === IMPRESSÃO === */
+    /* ---------- IMPRESSÃO ---------- */
     @media print {
-      body { padding: 0; }
-      @page { margin: 1.5cm; size: A4 portrait; }
+      body   { padding: 0 0 80px 0; }
+      @page  { margin: 1.5cm; size: A4 portrait; }
+      .q-footer { bottom: 0; }
     }
   `;
 }
@@ -1124,7 +1120,7 @@ function renderQuoteHtml(q, issuer, client){
   const dateOnly = formatDateISOtoLocal(q.createdAt);
 
   const logoHtml = issuer.logo
-    ? `<div class="q-logo"><img src="${issuer.logo}" alt="Logo" /></div>`
+    ? `<div class="q-logo"><img src="${issuer.logo}" alt="Logo"/></div>`
     : '';
 
   const itemRows = q.items.map(it => `
@@ -1158,7 +1154,7 @@ function renderQuoteHtml(q, issuer, client){
             ${issuer.cnpjCpf ? `<div class="q-box-cnpj">CNPJ/CPF: ${escapeHtml(issuer.cnpjCpf)}</div>` : ''}
             <div class="q-box-info">
               ${issuer.address ? escapeHtml(issuer.address)+'<br/>' : ''}
-              ${issuer.phone   ? 'Tel: '+escapeHtml(issuer.phone) : ''}
+              ${issuer.phone   ? 'Tel: '+escapeHtml(issuer.phone)   : ''}
             </div>
           </div>
         </td>
@@ -1170,7 +1166,7 @@ function renderQuoteHtml(q, issuer, client){
             ${client.cnpjCpf ? `<div class="q-box-cnpj">CNPJ/CPF: ${escapeHtml(client.cnpjCpf)}</div>` : ''}
             <div class="q-box-info">
               ${client.address ? escapeHtml(client.address)+'<br/>' : ''}
-              ${client.phone   ? 'Tel: '+escapeHtml(client.phone) : ''}
+              ${client.phone   ? 'Tel: '+escapeHtml(client.phone)   : ''}
             </div>
           </div>
         </td>
@@ -1195,11 +1191,13 @@ function renderQuoteHtml(q, issuer, client){
 
     ${notesHtml}
 
+    <!-- ASSINATURA no final da folha -->
     <div class="q-signature">
       <div class="q-sig-line"></div>
       <div class="q-sig-name">${escapeHtml(issuer.name||'')}</div>
     </div>
 
+    <!-- DATA no rodapé fixo -->
     <div class="q-footer">Orçamento gerado em: ${escapeHtml(dateOnly)}</div>
   `;
 }
