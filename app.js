@@ -1186,8 +1186,8 @@ function generatePDFFromQuote(quoteId) {
     .sig-block{text-align:center;margin-top:160px;margin-bottom:40px;page-break-inside:avoid;}
     .sig-hr{display:inline-block;width:55%;border-top:1.5pt solid #1a1a1a;}
     .sig-name{font-size:10pt;font-weight:bold;text-align:center;margin-top:6px;}
-    .footer{text-align:center;font-size:9pt;color:#888888;margin-top:16px;border-top:1px solid #e5e7eb;padding-top:8px;}
-    @media print{body{padding:0;}}
+    .footer{position:fixed;bottom:0;left:0;right:0;text-align:center;font-size:9pt;color:#888888;border-top:1px solid #e5e7eb;padding:6px 0;background:#fff;}
+    @media print{body{padding:0;}.footer{position:fixed;bottom:0;left:0;right:0;}}
   </style>
 </head>
 <body>
@@ -1196,7 +1196,6 @@ function generatePDFFromQuote(quoteId) {
 
   <p class="titulo">ORÇAMENTO</p>
   <p class="numero">${escapeHtml(q.numero||q.id)}</p>
-  <p class="gerado">Gerado em: ${dateOnly}</p>
 
   <table class="layout" cellspacing="0" cellpadding="0">
     <tr>
