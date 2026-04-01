@@ -16,26 +16,40 @@ async function sbSelect(table, query = "") {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${query}`, {
     headers: { ...SB_HEADERS, "Prefer": "" }
   });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  const text = await res.text();
+  if (!res.ok) {
+    console.error(`[Supabase] sbSelect error (${table}):`, text);
+    throw new Error(text);
+  }
+  try { return JSON.parse(text); } catch { return []; }
 }
 
 async function sbUpsert(table, data) {
+  // Garante que mandamos sempre um array — Supabase exige isso para upsert confiável
+  const payload = Array.isArray(data) ? data : [data];
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
     method: "POST",
     headers: { ...SB_HEADERS, "Prefer": "resolution=merge-duplicates,return=representation" },
-    body: JSON.stringify(data)
+    body: JSON.stringify(payload)
   });
-  if (!res.ok) throw new Error(await res.text());
-  return res.json();
+  const text = await res.text();
+  if (!res.ok) {
+    console.error(`[Supabase] sbUpsert error (${table}):`, text);
+    throw new Error(text);
+  }
+  try { return JSON.parse(text); } catch { return []; }
 }
 
 async function sbDelete(table, id) {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${id}`, {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${encodeURIComponent(id)}`, {
     method: "DELETE",
-    headers: SB_HEADERS
+    headers: { ...SB_HEADERS, "Prefer": "" }
   });
-  if (!res.ok) throw new Error(await res.text());
+  const text = await res.text();
+  if (!res.ok) {
+    console.error(`[Supabase] sbDelete error (${table}):`, text);
+    throw new Error(text);
+  }
 }
 
 // ========== STORAGE (Supabase) ==========
@@ -117,17 +131,73 @@ async function saveClient(client) {
 
 async function saveQuote(quote) {
   const row = {
-    id:         quote.id,
-    issuer_id:  quote.issuerId,
-    client_id:  quote.clientId,
-    numero:     quote.numero   || null,
-    items:      quote.items,
-    subtotal:   quote.subtotal,
-    total:      quote.total,
-    notes:      quote.notes    || null,
-    created_at: quote.createdAt
+    id:        quote.id,
+    issuer_id: quote.issuerId,
+    client_id: quote.clientId,
+    numero:    quote.numero   || null,
+    // items precisa ser JSON string para Supabase JSONB aceitar via REST
+    items:     typeof quote.items === 'string' ? JSON.parse(quote.items) : (quote.items || []),
+    subtotal:  parseFloat(quote.subtotal) || 0,
+    total:     parseFloat(quote.total)    || 0,
+    notes:     quote.notes    || null,
   };
+  // Só inclui created_at se já existir (edição); novo registro usa o default do banco
+  if (quote.createdAt) row.created_at = quote.createdAt;
   await sbUpsert("quotes", row);
+}
+
+// ========== RELOAD HELPERS (sincroniza com Supabase após cada operação) ==========
+async function reloadIssuers() {
+  try {
+    const rows = await sbSelect("issuers", "order=created_at.asc");
+    store.issuers = rows.map(r => ({
+      id:        r.id,
+      name:      r.name,
+      cnpjCpf:   r.cnpj_cpf || r.cnpj || "",
+      address:   r.address  || "",
+      phone:     r.phone    || "",
+      logo:      r.logo     || null,
+      createdAt: r.created_at
+    }));
+  } catch (err) {
+    console.error("[Supabase] reloadIssuers error:", err);
+  }
+}
+
+async function reloadClients() {
+  try {
+    const rows = await sbSelect("clients", "order=created_at.asc");
+    store.clients = rows.map(r => ({
+      id:        r.id,
+      name:      r.name,
+      cnpjCpf:   r.cnpj_cpf || "",
+      address:   r.address  || "",
+      phone:     r.phone    || "",
+      createdAt: r.created_at
+    }));
+  } catch (err) {
+    console.error("[Supabase] reloadClients error:", err);
+  }
+}
+
+async function reloadQuotes() {
+  try {
+    const rows = await sbSelect("quotes", "order=created_at.asc");
+    store.quotes = rows.map(r => ({
+      id:        r.id,
+      issuerId:  r.issuer_id,
+      clientId:  r.client_id,
+      numero:    r.numero,
+      items:     r.items     || [],
+      subtotal:  r.subtotal,
+      total:     r.total,
+      notes:     r.notes     || "",
+      createdAt: r.created_at,
+      updatedAt: r.updated_at || r.created_at
+    }));
+  } catch (err) {
+    console.error("[Supabase] reloadQuotes error:", err);
+  }
 }
 
 // ========== LOADING OVERLAY ==========
@@ -157,7 +227,15 @@ function showLoadingOverlay(show) {
 }
 
 // ========== UTILITY ==========
-function uid() { return crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2,18); }
+function uid() {
+  // crypto.randomUUID() garante UUID válido para o Supabase (tipo uuid ou text)
+  if (crypto && crypto.randomUUID) return crypto.randomUUID();
+  // Fallback: gera UUID v4 manualmente
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = Math.random() * 16 | 0;
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+}
 const money = v => Number(v||0).toFixed(2);
 
 function computeNextQuoteNumberForIssuer(issuerId) {
@@ -220,8 +298,41 @@ function highlightText(text, query) {
 }
 
 function showNotification(message, type = 'success') {
+  // Remove toast anterior se existir
+  const old = document.getElementById('sp-toast');
+  if (old) old.remove();
+
+  const colors = {
+    success: { bg: '#16a34a', border: '#15803d' },
+    error:   { bg: '#dc2626', border: '#b91c1c' },
+    info:    { bg: '#0d7de0', border: '#0369a1' }
+  };
+  const c = colors[type] || colors.info;
   const icon = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
-  alert(`${icon} ${message}`);
+
+  const toast = document.createElement('div');
+  toast.id = 'sp-toast';
+  toast.style.cssText = `
+    position:fixed;bottom:24px;right:24px;z-index:99999;
+    max-width:360px;min-width:220px;
+    background:${c.bg};border:1.5px solid ${c.border};
+    color:#fff;font-family:Inter,Arial,sans-serif;font-size:14px;font-weight:500;
+    padding:14px 18px;border-radius:10px;
+    box-shadow:0 4px 24px rgba(0,0,0,.25);
+    display:flex;align-items:flex-start;gap:10px;
+    animation:spSlideIn .25s ease;
+    word-break:break-word;
+  `;
+  const style = document.getElementById('sp-toast-style');
+  if (!style) {
+    const s = document.createElement('style');
+    s.id = 'sp-toast-style';
+    s.textContent = '@keyframes spSlideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}';
+    document.head.appendChild(s);
+  }
+  toast.innerHTML = `<span style="font-size:18px;line-height:1;">${icon}</span><span>${message}</span>`;
+  document.body.appendChild(toast);
+  setTimeout(() => { if (toast.parentNode) toast.remove(); }, type === 'error' ? 6000 : 3500);
 }
 
 // ========== DOM ELEMENTS ==========
@@ -479,6 +590,7 @@ if (issuerForm) {
           if (issuerLogoInput)   issuerLogoInput.value = '';
           if (issuerLogoPreview) issuerLogoPreview.style.display = 'none';
           if (issuerLogoImg)     issuerLogoImg.src = '';
+          await reloadIssuers();
           renderIssuers(); renderQuotes();
           showNotification("Emissor atualizado com sucesso!", "success");
           return;
@@ -486,6 +598,7 @@ if (issuerForm) {
       }
 
       const newItem = { id: uid(), name, cnpjCpf, address, phone, logo: currentIssuerLogoDataUrl || null };
+      // Salva no Supabase — só atualiza o store local se não der erro
       await saveIssuer(newItem);
       store.issuers.push(newItem);
       issuerForm.reset();
@@ -493,6 +606,8 @@ if (issuerForm) {
       if (issuerLogoInput)   issuerLogoInput.value = '';
       if (issuerLogoPreview) issuerLogoPreview.style.display = 'none';
       if (issuerLogoImg)     issuerLogoImg.src = '';
+      // Recarrega do banco para garantir consistência entre dispositivos
+      await reloadIssuers();
       renderIssuers(); renderQuotes();
       showNotification("Emissor adicionado com sucesso!", "success");
     } catch (err) {
@@ -509,7 +624,7 @@ if (issuerList) {
         const id = e.target.dataset.id;
         if (!confirm("❓ Excluir este emissor?")) return;
         await sbDelete("issuers", id);
-        store.issuers = store.issuers.filter(x => x.id !== id);
+        await reloadIssuers();
         renderIssuers(); renderQuotes();
         showNotification("Emissor excluído", "success");
       } else if (e.target.classList.contains("edit-issuer")) {
@@ -589,6 +704,7 @@ if (clientForm) {
           if (clientSubmitBtn) clientSubmitBtn.textContent = "Adicionar Cliente";
           if (clientCancelBtn) clientCancelBtn.style.display = "none";
           clientForm.reset();
+          await reloadClients();
           renderClients(); renderQuotes();
           showNotification("Cliente atualizado com sucesso!", "success");
           return;
@@ -599,6 +715,8 @@ if (clientForm) {
       await saveClient(newItem);
       store.clients.push(newItem);
       clientForm.reset();
+      // Recarrega do banco para garantir consistência entre dispositivos
+      await reloadClients();
       renderClients(); renderQuotes();
       showNotification("Cliente adicionado com sucesso!", "success");
     } catch (err) {
@@ -615,7 +733,7 @@ if (clientList) {
         const id = e.target.dataset.id;
         if (!confirm("❓ Excluir este cliente?")) return;
         await sbDelete("clients", id);
-        store.clients = store.clients.filter(x => x.id !== id);
+        await reloadClients();
         renderClients(); renderQuotes();
         showNotification("Cliente excluído", "success");
       } else if (e.target.classList.contains("edit-client")) {
@@ -689,6 +807,8 @@ if (saveQuoteBtn) {
         if (quoteDate && quoteDate.value) q.createdAt = new Date(quoteDate.value+'T12:00:00').toISOString();
         q.updatedAt = new Date().toISOString();
         await saveQuote(q);
+        // Recarrega do banco
+        await reloadQuotes();
         showNotification(`✅ Orçamento ${q.numero} atualizado!`, "success");
         endEditMode(); renderQuotes();
         currentItems = [{descricao:"",quantidade:1,valorUnitario:0}];
@@ -707,6 +827,8 @@ if (saveQuoteBtn) {
       await saveQuote(q);
       store.quotes.push(q);
       currentItems = [{descricao:"",quantidade:1,valorUnitario:0}];
+      // Recarrega orçamentos do banco para garantir sincronia entre dispositivos
+      await reloadQuotes();
       renderItems(currentItems); renderQuotes();
       setDefaultQuoteFields();
       showNotification(`✅ Orçamento ${q.numero} salvo com sucesso!`, "success");
@@ -771,7 +893,7 @@ function attachQuoteListListeners() {
       if (!confirm("❓ Excluir este orçamento permanentemente?")) return;
       try {
         await sbDelete("quotes", id);
-        store.quotes = store.quotes.filter(q => q.id !== id);
+        await reloadQuotes();
         renderQuotes();
         showNotification("Orçamento excluído", "success");
       } catch (err) { console.error("[ERROR] del-quote:", err); showNotification("Erro ao excluir orçamento", "error"); }
