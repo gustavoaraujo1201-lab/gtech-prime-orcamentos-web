@@ -324,11 +324,6 @@ function renderQuotes(){
   });
 
   attachQuoteListListeners();
-  quotesList.querySelectorAll(".export-pdf").forEach(btn => {
-  btn.addEventListener("click", (e) => {
-    generatePDFFromQuote(e.target.dataset.id);
-  });
-});
 }
 
 function renderItems(items=[]){
@@ -969,22 +964,12 @@ function exportQuoteDoc(quoteId){
 
 function getPrintCss() {
   return `
-    *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1a1a1a;background:#fff;
-         padding:24px;max-width:780px;margin:0 auto;
-         -webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+    body{font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#1a1a1a;background:#fff;padding:24px;max-width:780px;margin:0 auto;}
     table{border-collapse:collapse;width:100%;}
     img{max-width:100%;height:auto;display:block;}
-    /* garante que fundos coloridos aparecem no PDF salvo */
-    *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
-    @media screen and (max-width:600px){
-      body{padding:12px;}
-      table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;}
-    }
-    @media print{
-      body{padding:0;}
-      @page{margin:1.5cm;size:A4 portrait;}
-    }
+    @media screen and (max-width:600px){body{padding:12px;}table{display:block;overflow-x:auto;}}
+    @media print{body{padding:0;}@page{margin:1.5cm;size:A4 portrait;}}
   `;
 }
 
@@ -1139,9 +1124,7 @@ function renderQuoteHtml(q, issuer, client){
   `;
 }
 
-
 // ========== PDF / PRINT EXPORT ==========
-// Usa triggerPrint — PDF baixado é cópia fiel da impressão do sistema
 function generatePDFFromQuote(quoteId) {
   try {
     const q = store.quotes.find(x => x.id === quoteId);
@@ -1155,6 +1138,24 @@ function generatePDFFromQuote(quoteId) {
     showNotification("Erro ao gerar PDF", "error");
   }
 }
+
+function attachQuoteListListeners(){
+  if (!quotesList) return;
+  quotesList.querySelectorAll(".view-quote").forEach(btn=>{ btn.addEventListener("click",(e)=> openPreview(e.target.dataset.id)); });
+  quotesList.querySelectorAll(".export-quote").forEach(btn=>{ btn.addEventListener("click",(e)=> exportQuoteDoc(e.target.dataset.id)); });
+  quotesList.querySelectorAll(".export-pdf").forEach(btn=>{ btn.addEventListener("click",(e)=> generatePDFFromQuote(e.target.dataset.id)); });
+  quotesList.querySelectorAll(".edit-quote").forEach(btn=>{ btn.addEventListener("click",(e)=> startEditMode(e.target.dataset.id)); });
+  quotesList.querySelectorAll(".del-quote").forEach(btn=>{
+    btn.addEventListener("click",(e)=>{
+      const id = e.target.dataset.id;
+      if (!confirm("❓ Excluir este orçamento permanentemente?")) return;
+      store.quotes = store.quotes.filter(q=>q.id!==id); 
+      saveStore(store); renderQuotes();
+      showNotification("Orçamento excluído", "success");
+    });
+  });
+}
+// ========== PDF EXPORT FUNCTION ==========
 
 // ========== INITIALIZATION ==========
 function renderAll(){ 
