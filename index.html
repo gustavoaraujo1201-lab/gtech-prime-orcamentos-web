@@ -1202,10 +1202,14 @@
         card.querySelector('[data-action="word"]').addEventListener('click', () => { if (typeof exportQuoteDoc==='function') exportQuoteDoc(qt.id); });
         card.querySelector('[data-action="pdf"]').addEventListener('click',  () => { if (typeof exportQuotePdf==='function') exportQuotePdf(qt.id); });
         card.querySelector('[data-action="edit"]').addEventListener('click', () => { if (typeof startEditMode==='function') startEditMode(qt.id); showScreen('home'); });
-        card.querySelector('[data-action="del"]').addEventListener('click', () => {
+        card.querySelector('[data-action="del"]').addEventListener('click', async () => {
           if (!confirm('❓ Excluir este orçamento?')) return;
-          store.quotes = store.quotes.filter(x => x.id !== qt.id);
-          if (typeof saveStore==='function') saveStore(store);
+          try {
+            if (typeof sbDelete === 'function') await sbDelete('quotes', qt.id);
+            store.quotes = store.quotes.filter(x => x.id !== qt.id);
+          } catch(e) {
+            console.error('Erro ao excluir orçamento:', e);
+          }
           renderPanel();
           if (typeof renderQuotes==='function') renderQuotes();
         });
