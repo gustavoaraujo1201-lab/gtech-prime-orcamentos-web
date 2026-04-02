@@ -539,81 +539,59 @@
       const num = q?.numero || id;
 
       const msgWpp = encodeURIComponent(
-        'Olá! Segue o orçamento *' + num + '*.
-
-' +
-        '📋 *De:* ' + (iss.name||'—') + '
-' +
-        '👤 *Para:* ' + (cli.name||'—') + '
-' +
-        '💰 *Valor:* ' + totalFmt + '
-' +
-        '📅 *Data:* ' + dateStr + '
-
-' +
+        'Olá! Segue o orçamento *' + num + '*.' + '\n\n' +
+        '📋 *De:* ' + (iss.name||'—') + '\n' +
+        '👤 *Para:* ' + (cli.name||'—') + '\n' +
+        '💰 *Valor:* ' + totalFmt + '\n' +
+        '📅 *Data:* ' + dateStr + '\n\n' +
         'Para visualizar o orçamento completo em PDF, solicite o arquivo ao emissor.'
       );
       const assunto = encodeURIComponent('Orçamento ' + num + ' - ' + (iss.name||''));
       const corpoEmail = encodeURIComponent(
-        'Olá,
-
-Segue o orçamento ' + num + '.
-
-' +
-        'De: ' + (iss.name||'—') + '
-' +
-        'Para: ' + (cli.name||'—') + '
-' +
-        'Valor: ' + totalFmt + '
-' +
-        'Data: ' + dateStr + '
-
-' +
-        'Para obter o PDF, solicite o arquivo ao emissor.
-
-' +
-        'Atenciosamente,
-' + (iss.name||'')
+        'Olá,' + '\n\n' +
+        'Segue o orçamento ' + num + '.' + '\n\n' +
+        'De: ' + (iss.name||'—') + '\n' +
+        'Para: ' + (cli.name||'—') + '\n' +
+        'Valor: ' + totalFmt + '\n' +
+        'Data: ' + dateStr + '\n\n' +
+        'Para visualizar o PDF completo, solicite o arquivo ao emissor.'
       );
 
-      // Cria overlay
-      let overlay = document.getElementById('shareModalOverlay');
-      if (!overlay) {
-        overlay = document.createElement('div');
-        overlay.className = 'share-modal-overlay';
-        overlay.id = 'shareModalOverlay';
-        overlay.innerHTML =
-          '<div class="share-modal-box">' +
-            '<div class="share-modal-title">🔗 Compartilhar Orçamento</div>' +
-            '<div class="share-modal-sub" id="shareModalSub"></div>' +
-            '<div class="share-modal-btns">' +
-              '<button class="share-modal-btn wpp" id="shareBtnWpp">📱 Compartilhar no WhatsApp</button>' +
-              '<button class="share-modal-btn email" id="shareBtnEmail">📧 Enviar por Email</button>' +
-            '</div>' +
-            '<button class="share-modal-cancel" id="shareModalCancel">Cancelar</button>' +
-          '</div>';
-        document.body.appendChild(overlay);
-        document.getElementById('shareModalCancel').addEventListener('click', () => overlay.classList.remove('open'));
-        overlay.addEventListener('click', e => { if(e.target===overlay) overlay.classList.remove('open'); });
-      }
+      // Remove modal anterior se existir
+      const prev = document.getElementById('sp-share-modal');
+      if (prev) prev.remove();
 
-      document.getElementById('shareModalSub').textContent = num + ' • ' + (cli.name||'—') + ' • ' + totalFmt;
-      document.getElementById('shareBtnWpp').onclick = () => { window.open('https://wa.me/?text=' + msgWpp, '_blank'); overlay.classList.remove('open'); };
-      document.getElementById('shareBtnEmail').onclick = () => { window.location.href = 'mailto:?subject=' + assunto + '&body=' + corpoEmail; overlay.classList.remove('open'); };
-      overlay.classList.add('open');
+      const modal = document.createElement('div');
+      modal.id = 'sp-share-modal';
+      modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);padding:20px;';
+      modal.innerHTML = `
+        <div style="background:#fff;border-radius:14px;padding:28px 24px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+          <h3 style="margin:0 0 6px;font-size:17px;color:#1a1a1a;">📤 Compartilhar Orçamento</h3>
+          <p style="margin:0 0 20px;font-size:13px;color:#6b7280;">Orçamento <strong>${num}</strong> · ${totalFmt}</p>
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <a href="https://wa.me/?text=${msgWpp}" target="_blank" rel="noopener"
+               style="display:flex;align-items:center;gap:10px;padding:13px 16px;background:#25d366;color:#fff;border-radius:9px;text-decoration:none;font-weight:600;font-size:14px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              Compartilhar no WhatsApp
+            </a>
+            <a href="mailto:?subject=${assunto}&body=${corpoEmail}" 
+               style="display:flex;align-items:center;gap:10px;padding:13px 16px;background:#0d7de0;color:#fff;border-radius:9px;text-decoration:none;font-weight:600;font-size:14px;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
+              Enviar por Email
+            </a>
+            <button onclick="document.getElementById('sp-share-modal').remove()"
+               style="padding:11px 16px;background:#f3f4f6;color:#374151;border:none;border-radius:9px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;">
+              Cancelar
+            </button>
+          </div>
+        </div>`;
+
+      // Fecha ao clicar fora
+      modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+      document.body.appendChild(modal);
     }
 
-    async function deleteQuote(id){
-      if (!confirm('❓ Excluir este orçamento permanentemente?')) return;
-      if (typeof dbDeleteQuote==='function'){
-        await dbDeleteQuote(id);
-        if(typeof store!=='undefined') store.quotes=store.quotes.filter(q=>q.id!==id);
-        renderPanel();
-        if(typeof showNotification==='function') showNotification('Orçamento excluído','success');
-      }
-    }
-
-    // Busca
+        // Busca
     spSearch && spSearch.addEventListener('input', ()=>{
       spQuery=spSearch.value;
       spClear.style.display=spQuery?'block':'none';
