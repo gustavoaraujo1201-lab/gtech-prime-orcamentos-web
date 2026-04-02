@@ -206,14 +206,20 @@
     .sp-card-btn.danger:hover{border-color:#fca5a5;background:#fef2f2;}
     .search-highlight{background:#fef08a;border-radius:2px;padding:0 1px;}
     @media(max-width:800px){.quotes-layout{grid-template-columns:1fr;}}
-    .share-menu{display:none;position:absolute;z-index:999;background:#1f2937;border:1px solid rgba(255,255,255,0.12);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.3);overflow:hidden;min-width:180px;}
-    .share-menu.open{display:block;animation:shareIn .18s ease;}
-    @keyframes shareIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
-    .share-item{display:flex;align-items:center;gap:10px;width:100%;padding:11px 16px;background:none;border:none;font-family:inherit;font-size:13px;font-weight:500;color:rgba(255,255,255,0.8);cursor:pointer;transition:all 0.15s;text-align:left;}
-    .share-item:hover{background:rgba(255,255,255,0.08);color:#fff;}
-    .share-item .share-icon{font-size:16px;width:20px;text-align:center;}
-    .share-divider{height:1px;background:rgba(255,255,255,0.07);}
-    .sp-card{position:relative;}
+    .share-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9000;align-items:center;justify-content:center;}
+    .share-modal-overlay.open{display:flex;animation:smIn .2s ease;}
+    @keyframes smIn{from{opacity:0}to{opacity:1}}
+    .share-modal-box{background:#fff;border-radius:14px;padding:24px;width:100%;max-width:320px;box-shadow:0 20px 60px rgba(0,0,0,0.25);text-align:center;}
+    .share-modal-title{font-size:15px;font-weight:700;color:#1e293b;margin-bottom:6px;}
+    .share-modal-sub{font-size:12px;color:#94a3b8;margin-bottom:20px;}
+    .share-modal-btns{display:flex;flex-direction:column;gap:10px;}
+    .share-modal-btn{display:flex;align-items:center;justify-content:center;gap:10px;padding:13px 20px;border-radius:10px;border:none;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.18s;}
+    .share-modal-btn.wpp{background:#25D366;color:#fff;}
+    .share-modal-btn.wpp:hover{background:#1ebe5d;}
+    .share-modal-btn.email{background:#0d7de0;color:#fff;}
+    .share-modal-btn.email:hover{background:#0a5fb8;}
+    .share-modal-cancel{margin-top:14px;background:none;border:none;font-family:inherit;font-size:13px;color:#94a3b8;cursor:pointer;padding:4px 8px;border-radius:6px;}
+    .share-modal-cancel:hover{color:#475569;background:#f1f5f9;}
   </style>
 </head>
 <body>
@@ -508,7 +514,7 @@
               <button class="sp-card-btn" onclick="openPreview('${q.id}')">👁️ Ver</button>
               <button class="sp-card-btn" onclick="generatePDFFromQuote('${q.id}')">📥 PDF</button>
               <button class="sp-card-btn" onclick="exportQuoteDoc('${q.id}')">📄 Word</button>
-              <button class="sp-card-btn share-btn" onclick="toggleShareMenu('${q.id}', event)">🔗 Compartilhar</button>
+              <button class="sp-card-btn share-btn" onclick="openShareModal('${q.id}')">🔗 Compartilhar</button>
               <button class="sp-card-btn" onclick="startEditMode_redirect('${q.id}')">✏️ Editar</button>
               <button class="sp-card-btn danger" onclick="deleteQuote('${q.id}')">🗑️</button>
             </div>
@@ -524,89 +530,78 @@
     }
 
 
-    function toggleShareMenu(id, e) {
-      e.stopPropagation();
-      // Fecha todos os menus abertos
-      document.querySelectorAll('.share-menu.open').forEach(m => {
-        if (m.dataset.id !== id) m.classList.remove('open');
-      });
-      let menu = document.getElementById('share-menu-' + id);
-      if (!menu) {
-        const q = store.quotes.find(x => x.id === id);
-        const iss = (store.issuers||[]).find(i => i.id === q?.issuerId) || {};
-        const cli = (store.clients||[]).find(c => c.id === q?.clientId) || {};
-        const totalFmt = 'R$ ' + Number(q?.total||0).toLocaleString('pt-BR', {minimumFractionDigits:2});
-        const dateStr = q?.createdAt ? new Date(q.createdAt).toLocaleDateString('pt-BR') : '';
-        const num = q?.numero || id;
+    function openShareModal(id) {
+      const q = store.quotes.find(x => x.id === id);
+      const iss = (store.issuers||[]).find(i => i.id === q?.issuerId) || {};
+      const cli = (store.clients||[]).find(c => c.id === q?.clientId) || {};
+      const totalFmt = 'R$ ' + Number(q?.total||0).toLocaleString('pt-BR', {minimumFractionDigits:2});
+      const dateStr = q?.createdAt ? new Date(q.createdAt).toLocaleDateString('pt-BR') : '';
+      const num = q?.numero || id;
 
-        menu = document.createElement('div');
-        menu.className = 'share-menu';
-        menu.id = 'share-menu-' + id;
-        menu.dataset.id = id;
+      const msgWpp = encodeURIComponent(
+        'Olá! Segue o orçamento *' + num + '*.
 
-        const msgWpp = encodeURIComponent(
-          `Olá! Segue o orçamento *${num}*.
+' +
+        '📋 *De:* ' + (iss.name||'—') + '
+' +
+        '👤 *Para:* ' + (cli.name||'—') + '
+' +
+        '💰 *Valor:* ' + totalFmt + '
+' +
+        '📅 *Data:* ' + dateStr + '
 
-` +
-          `📋 *De:* ${iss.name||'—'}
-` +
-          `👤 *Para:* ${cli.name||'—'}
-` +
-          `💰 *Valor:* ${totalFmt}
-` +
-          `📅 *Data:* ${dateStr}
+' +
+        'Para visualizar o orçamento completo em PDF, solicite o arquivo ao emissor.'
+      );
+      const assunto = encodeURIComponent('Orçamento ' + num + ' - ' + (iss.name||''));
+      const corpoEmail = encodeURIComponent(
+        'Olá,
 
-` +
-          `Para visualizar o orçamento completo em PDF, acesse o link e faça o download.`
-        );
+Segue o orçamento ' + num + '.
 
-        const assunto = encodeURIComponent(`Orçamento ${num} - ${iss.name||''}`);
-        const corpoEmail = encodeURIComponent(
-          `Olá,
+' +
+        'De: ' + (iss.name||'—') + '
+' +
+        'Para: ' + (cli.name||'—') + '
+' +
+        'Valor: ' + totalFmt + '
+' +
+        'Data: ' + dateStr + '
 
-Segue o orçamento ${num}.
+' +
+        'Para obter o PDF, solicite o arquivo ao emissor.
 
-` +
-          `De: ${iss.name||'—'}
-` +
-          `Para: ${cli.name||'—'}
-` +
-          `Valor: ${totalFmt}
-` +
-          `Data: ${dateStr}
+' +
+        'Atenciosamente,
+' + (iss.name||'')
+      );
 
-` +
-          `Para obter o PDF, acesse o sistema e faça o download do orçamento.
-
-` +
-          `Atenciosamente,
-${iss.name||''}`
-        );
-
-        const wppUrl = 'https://wa.me/?text=' + msgWpp;
-        const mailUrl = 'mailto:?subject=' + assunto + '&body=' + corpoEmail;
-        menu.innerHTML =
-          '<button class="share-item" onclick="window.open(\'' + wppUrl + '\',\'_blank\')">' +
-            '<span class="share-icon">📱</span> WhatsApp' +
-          '</button>' +
-          '<div class="share-divider"></div>' +
-          '<button class="share-item" onclick="window.location.href=\'' + mailUrl + '\'">' +
-            '<span class="share-icon">📧</span> Email' +
-          '</button>';
-
-        // Posiciona o menu relativo ao botão clicado
-        const btn = e.currentTarget;
-        const card = btn.closest('.sp-card');
-        card.appendChild(menu);
+      // Cria overlay
+      let overlay = document.getElementById('shareModalOverlay');
+      if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.className = 'share-modal-overlay';
+        overlay.id = 'shareModalOverlay';
+        overlay.innerHTML =
+          '<div class="share-modal-box">' +
+            '<div class="share-modal-title">🔗 Compartilhar Orçamento</div>' +
+            '<div class="share-modal-sub" id="shareModalSub"></div>' +
+            '<div class="share-modal-btns">' +
+              '<button class="share-modal-btn wpp" id="shareBtnWpp">📱 Compartilhar no WhatsApp</button>' +
+              '<button class="share-modal-btn email" id="shareBtnEmail">📧 Enviar por Email</button>' +
+            '</div>' +
+            '<button class="share-modal-cancel" id="shareModalCancel">Cancelar</button>' +
+          '</div>';
+        document.body.appendChild(overlay);
+        document.getElementById('shareModalCancel').addEventListener('click', () => overlay.classList.remove('open'));
+        overlay.addEventListener('click', e => { if(e.target===overlay) overlay.classList.remove('open'); });
       }
 
-      menu.classList.toggle('open');
+      document.getElementById('shareModalSub').textContent = num + ' • ' + (cli.name||'—') + ' • ' + totalFmt;
+      document.getElementById('shareBtnWpp').onclick = () => { window.open('https://wa.me/?text=' + msgWpp, '_blank'); overlay.classList.remove('open'); };
+      document.getElementById('shareBtnEmail').onclick = () => { window.location.href = 'mailto:?subject=' + assunto + '&body=' + corpoEmail; overlay.classList.remove('open'); };
+      overlay.classList.add('open');
     }
-
-    // Fecha menu ao clicar fora
-    document.addEventListener('click', () => {
-      document.querySelectorAll('.share-menu.open').forEach(m => m.classList.remove('open'));
-    });
 
     async function deleteQuote(id){
       if (!confirm('❓ Excluir este orçamento permanentemente?')) return;
