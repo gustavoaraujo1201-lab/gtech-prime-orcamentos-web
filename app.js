@@ -1186,8 +1186,8 @@ function generatePDFFromQuote(quoteId) {
     .sig-block{text-align:center;margin-top:160px;margin-bottom:40px;page-break-inside:avoid;}
     .sig-hr{display:inline-block;width:55%;border-top:1.5pt solid #1a1a1a;}
     .sig-name{font-size:10pt;font-weight:bold;text-align:center;margin-top:6px;}
-    .footer{position:fixed;bottom:0;left:0;right:0;text-align:center;font-size:9pt;color:#888888;border-top:1px solid #e5e7eb;padding:6px 0;background:#fff;}
-    @media print{body{padding:0;}.footer{position:fixed;bottom:0;left:0;right:0;}}
+    .footer{text-align:center;font-size:9pt;color:#888888;border-top:1px solid #e5e7eb;padding-top:8px;margin-top:16px;}
+    @media print{body{padding:0;}.footer{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:6px 0;}}
   </style>
 </head>
 <body>
@@ -1251,14 +1251,28 @@ function generatePDFFromQuote(quoteId) {
 </body>
 </html>`;
 
-    // Abre numa nova aba e dispara impressão — o usuário salva como PDF
-    const blob = new Blob([fullDoc], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const win = window.open(url, '_blank');
-    if (!win) {
-      showNotification("Permita popups para este site e tente novamente.", "error");
+    // Usa iframe oculto para impressão (evita bloqueio de popup)
+    let iframe = document.getElementById('_softprime_pdf_frame');
+    if (!iframe) {
+      iframe = document.createElement('iframe');
+      iframe.id = '_softprime_pdf_frame';
+      iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;border:none;visibility:hidden;';
+      document.body.appendChild(iframe);
     }
-    setTimeout(() => URL.revokeObjectURL(url), 60000);
+    const iDoc = iframe.contentWindow.document;
+    iDoc.open(); iDoc.write(fullDoc); iDoc.close();
+
+    const allImgs = Array.from(iDoc.images);
+    const pending = allImgs.filter(i => !i.complete);
+    const doPrint = () => { iframe.contentWindow.focus(); iframe.contentWindow.print(); };
+    if (pending.length === 0) { setTimeout(doPrint, 400); }
+    else {
+      let done = 0;
+      pending.forEach(img => {
+        img.addEventListener('load',  () => { done++; if (done === pending.length) setTimeout(doPrint, 300); });
+        img.addEventListener('error', () => { done++; if (done === pending.length) setTimeout(doPrint, 300); });
+      });
+    }
   } catch (err) {
     console.error("[ERROR] generatePDFFromQuote:", err);
     showNotification("Erro ao gerar PDF", "error");
