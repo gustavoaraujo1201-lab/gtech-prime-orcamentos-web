@@ -290,6 +290,7 @@ const printBtn         = document.getElementById("printBtn");
 
 let currentItems = [{descricao:"",quantidade:1,valorUnitario:0}];
 let _appInitialized = false; // guard contra dupla inicialização
+window._appInitialized = false;
 let editingQuoteId   = null;
 let editingIssuerId  = null;
 let editingClientId  = null;
@@ -1212,13 +1213,15 @@ function renderAll(){ renderIssuers(); renderClients(); renderQuotes(); renderIt
 // Chamado pelo authManager após confirmar sessão (não depende de polling)
 async function initApp() {
   if (_appInitialized) { console.log("⚠️ initApp já foi chamado — ignorando dupla chamada"); return; }
-  _appInitialized = true;
+  _appInitialized = true; window._appInitialized = true;
   await loadAllData();
   renderAll();
   setDefaultQuoteFields();
   console.log("✅ SoftPrime iniciado! Usuário:", getUserId());
-  // Dispara evento para páginas que dependem dos dados (ex: orcamentos_salvos.html)
-  document.dispatchEvent(new CustomEvent('softprime:dataLoaded'));
+  // Se estiver na página de orçamentos salvos, chama renderPanel diretamente
+  if (window.location.pathname.endsWith('orcamentos_salvos.html')) {
+    if (typeof renderPanel === 'function') renderPanel();
+  }
 }
 
 // Fallback: se authManager já inicializou antes deste script carregar
