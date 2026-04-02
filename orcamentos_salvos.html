@@ -206,6 +206,14 @@
     .sp-card-btn.danger:hover{border-color:#fca5a5;background:#fef2f2;}
     .search-highlight{background:#fef08a;border-radius:2px;padding:0 1px;}
     @media(max-width:800px){.quotes-layout{grid-template-columns:1fr;}}
+    .share-menu{display:none;position:absolute;z-index:999;background:#1f2937;border:1px solid rgba(255,255,255,0.12);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.3);overflow:hidden;min-width:180px;}
+    .share-menu.open{display:block;animation:shareIn .18s ease;}
+    @keyframes shareIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+    .share-item{display:flex;align-items:center;gap:10px;width:100%;padding:11px 16px;background:none;border:none;font-family:inherit;font-size:13px;font-weight:500;color:rgba(255,255,255,0.8);cursor:pointer;transition:all 0.15s;text-align:left;}
+    .share-item:hover{background:rgba(255,255,255,0.08);color:#fff;}
+    .share-item .share-icon{font-size:16px;width:20px;text-align:center;}
+    .share-divider{height:1px;background:rgba(255,255,255,0.07);}
+    .sp-card{position:relative;}
   </style>
 </head>
 <body>
@@ -500,6 +508,7 @@
               <button class="sp-card-btn" onclick="openPreview('${q.id}')">👁️ Ver</button>
               <button class="sp-card-btn" onclick="generatePDFFromQuote('${q.id}')">📥 PDF</button>
               <button class="sp-card-btn" onclick="exportQuoteDoc('${q.id}')">📄 Word</button>
+              <button class="sp-card-btn share-btn" onclick="toggleShareMenu('${q.id}', event)">🔗 Compartilhar</button>
               <button class="sp-card-btn" onclick="startEditMode_redirect('${q.id}')">✏️ Editar</button>
               <button class="sp-card-btn danger" onclick="deleteQuote('${q.id}')">🗑️</button>
             </div>
@@ -513,6 +522,89 @@
       sessionStorage.setItem('editQuoteId', id);
       window.location.href = 'index.html';
     }
+
+
+    function toggleShareMenu(id, e) {
+      e.stopPropagation();
+      // Fecha todos os menus abertos
+      document.querySelectorAll('.share-menu.open').forEach(m => {
+        if (m.dataset.id !== id) m.classList.remove('open');
+      });
+      let menu = document.getElementById('share-menu-' + id);
+      if (!menu) {
+        const q = store.quotes.find(x => x.id === id);
+        const iss = (store.issuers||[]).find(i => i.id === q?.issuerId) || {};
+        const cli = (store.clients||[]).find(c => c.id === q?.clientId) || {};
+        const totalFmt = 'R$ ' + Number(q?.total||0).toLocaleString('pt-BR', {minimumFractionDigits:2});
+        const dateStr = q?.createdAt ? new Date(q.createdAt).toLocaleDateString('pt-BR') : '';
+        const num = q?.numero || id;
+
+        menu = document.createElement('div');
+        menu.className = 'share-menu';
+        menu.id = 'share-menu-' + id;
+        menu.dataset.id = id;
+
+        const msgWpp = encodeURIComponent(
+          `Olá! Segue o orçamento *${num}*.
+
+` +
+          `📋 *De:* ${iss.name||'—'}
+` +
+          `👤 *Para:* ${cli.name||'—'}
+` +
+          `💰 *Valor:* ${totalFmt}
+` +
+          `📅 *Data:* ${dateStr}
+
+` +
+          `Para visualizar o orçamento completo em PDF, acesse o link e faça o download.`
+        );
+
+        const assunto = encodeURIComponent(`Orçamento ${num} - ${iss.name||''}`);
+        const corpoEmail = encodeURIComponent(
+          `Olá,
+
+Segue o orçamento ${num}.
+
+` +
+          `De: ${iss.name||'—'}
+` +
+          `Para: ${cli.name||'—'}
+` +
+          `Valor: ${totalFmt}
+` +
+          `Data: ${dateStr}
+
+` +
+          `Para obter o PDF, acesse o sistema e faça o download do orçamento.
+
+` +
+          `Atenciosamente,
+${iss.name||''}`
+        );
+
+        menu.innerHTML =
+          '<button class="share-item" onclick="window.open('https://wa.me/?text=' + msgWpp + '','_blank')">' +
+            '<span class="share-icon">📱</span> WhatsApp' +
+          '</button>' +
+          '<div class="share-divider"></div>' +
+          '<button class="share-item" onclick="window.location.href='mailto:?subject=' + assunto + '&body=' + corpoEmail + ''">' +
+            '<span class="share-icon">📧</span> Email' +
+          '</button>';
+
+        // Posiciona o menu relativo ao botão clicado
+        const btn = e.currentTarget;
+        const card = btn.closest('.sp-card');
+        card.appendChild(menu);
+      }
+
+      menu.classList.toggle('open');
+    }
+
+    // Fecha menu ao clicar fora
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.share-menu.open').forEach(m => m.classList.remove('open'));
+    });
 
     async function deleteQuote(id){
       if (!confirm('❓ Excluir este orçamento permanentemente?')) return;
