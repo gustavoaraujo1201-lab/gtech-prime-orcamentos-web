@@ -1217,6 +1217,8 @@ async function initApp() {
   renderAll();
   setDefaultQuoteFields();
   console.log("✅ SoftPrime iniciado! Usuário:", getUserId());
+  // Dispara evento para páginas que dependem dos dados (ex: orcamentos_salvos.html)
+  document.dispatchEvent(new CustomEvent('softprime:dataLoaded'));
 }
 
 // Fallback: se authManager já inicializou antes deste script carregar

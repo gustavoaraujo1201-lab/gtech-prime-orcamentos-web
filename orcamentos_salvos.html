@@ -220,7 +220,7 @@
             <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
           </svg>
         </button>
-        <span class="mobile-header-title">Soft<span style="color:#7c3aed;">Prime</span></span>
+        <span class="mobile-header-title">Soft<span style="color:#7c3aed;">Prime</span> <span style="font-weight:400;opacity:0.6;font-size:13px;">— Orçamentos</span></span>
       </div>
       <div class="header-actions">
         <button class="profile-btn" id="profileBtn" title="Meu Perfil">
@@ -538,8 +538,19 @@
       if (typeof currentPreviewQuoteId !== 'undefined' && currentPreviewQuoteId) generatePDFFromQuote(currentPreviewQuoteId);
     });
 
-    // Renderiza assim que os dados chegarem
-    const _panelInterval = setInterval(()=>{ if(typeof store!=='undefined'&&typeof renderPanel==='function'){ renderPanel(); clearInterval(_panelInterval); } },400);
+    // Renderiza assim que os dados chegarem — estratégia robusta
+    // O initApp() do app.js é assíncrono; esperamos store ser populado E authManager inicializado
+    let _panelAttempts = 0;
+    const _panelInterval = setInterval(()=>{
+      _panelAttempts++;
+      const hasStore  = typeof store !== 'undefined' && Array.isArray(store.quotes);
+      const appReady  = window.authManager && window.authManager._initialized && window.authManager.getUserId();
+      if (hasStore && appReady) { renderPanel(); clearInterval(_panelInterval); return; }
+      if (_panelAttempts > 25) { renderPanel(); clearInterval(_panelInterval); } // timeout 10s
+    }, 400);
+
+    // Hook extra: re-renderiza ao receber evento de dados carregados (emitido pelo app.js)
+    document.addEventListener('softprime:dataLoaded', ()=>{ renderPanel(); });
   </script>
 
   <script>
