@@ -152,8 +152,7 @@ class AuthManager {
         });
     }
 
-    // Compatibilidade com app.js
-    if (typeof renderAll === 'function') renderAll();
+    // NÃO chamar renderAll() aqui — o app.js chama após loadAllData()
   }
 
   // Aliases para compatibilidade com código legado

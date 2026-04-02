@@ -1181,14 +1181,24 @@ function renderQuoteHtml(q, issuer, client){
 function renderAll(){ renderIssuers(); renderClients(); renderQuotes(); renderItems(currentItems); }
 
 document.addEventListener('DOMContentLoaded', async ()=>{
-  // Aguarda authManager inicializar (ele precisa de alguns ms)
+  // Aguarda authManager inicializar E ter o usuário logado
   let tries = 0;
-  while ((!window.authManager || !window.authManager._initialized) && tries < 40){
-    await new Promise(r=>setTimeout(r,150)); tries++;
+  while (tries < 60){
+    if (window.authManager && window.authManager._initialized && window.authManager.getUserId()) break;
+    await new Promise(r=>setTimeout(r,150));
+    tries++;
+  }
+
+  const userId = window.authManager ? window.authManager.getUserId() : null;
+  if (!userId){
+    console.warn("Usuário não autenticado — dados não carregados");
+    renderAll();
+    setDefaultQuoteFields();
+    return;
   }
 
   await loadAllData();
   renderAll();
   setDefaultQuoteFields();
-  console.log("✅ SoftPrime Gerador de Orçamentos iniciado! (Supabase sync ativo)");
+  console.log("✅ SoftPrime iniciado! Usuário:", userId);
 });
