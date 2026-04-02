@@ -1195,11 +1195,11 @@ function renderQuoteHtml(q, issuer, client){
         </tr>
       </table>
       ${notesHtml}
-      <div style="margin-top:260px;margin-bottom:16px;text-align:center;page-break-inside:avoid;">
+      <div style="margin-top:200px;margin-bottom:16px;text-align:center;page-break-inside:avoid;">
         <div style="width:55%;border-top:1.5px solid #1a1a1a;margin:0 auto;"></div>
         <div style="font-weight:700;font-size:13px;margin-top:8px;">${escapeHtml(issuer.name||'')}</div>
       </div>
-      <div style="margin-top:24px;text-align:center;font-size:10px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:8px;">
+      <div style="position:fixed;bottom:16px;left:0;right:0;text-align:center;font-size:10px;color:#9ca3af;">
         Orçamento gerado em: ${escapeHtml(dateOnly)}
       </div>
     </div>`;

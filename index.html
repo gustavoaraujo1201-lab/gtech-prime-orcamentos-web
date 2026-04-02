@@ -96,23 +96,68 @@
     .sidebar-mobile-profile{display:none;}
     .mobile-header-title{display:none;}
     @media(max-width:600px){
-      .header{left:0;}
-      .sidebar{transform:translateX(-100%);transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);}
+      /* Header */
+      .header{left:0!important;right:0!important;height:56px;}
+      .header-row{padding:0 12px;}
+      .site-title{display:none;}
+
+      /* Sidebar */
+      .sidebar{transform:translateX(-100%);transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);width:260px!important;min-width:260px!important;z-index:9100;}
       .sidebar.mobile-open{transform:translateX(0);}
-      .sidebar-overlay{display:block;opacity:0;pointer-events:none;transition:opacity 0.28s;}
-      .sidebar-overlay.visible{opacity:1;pointer-events:auto;}
-      .sidebar-mobile-profile{display:block;}
-      .hamburger-btn{display:flex;align-items:center;justify-content:center;background:none;border:none;color:rgba(255,255,255,0.75);cursor:pointer;padding:6px;border-radius:7px;}
-      .hamburger-btn:hover{background:rgba(255,255,255,0.08);}
-      .mobile-header-title{display:inline-block;font-size:17px;font-weight:700;color:#fff;letter-spacing:0.5px;}
-      .main-content{margin-left:0;}
-      .screen{padding:16px 12px 40px;}
-      .form-grid{grid-template-columns:1fr;}
-      input,select,textarea{font-size:16px!important;padding:12px 14px;min-height:46px;}
-      .btn{min-height:44px;}
+      .sidebar-overlay{display:block!important;opacity:0;pointer-events:none;transition:opacity 0.28s;z-index:9050;}
+      .sidebar-overlay.visible{opacity:1!important;pointer-events:auto;}
+      .sidebar-mobile-profile{display:block!important;}
+
+      /* Hamburger e titulo */
+      .hamburger-btn{display:flex!important;align-items:center;justify-content:center;background:none;border:none;color:rgba(255,255,255,0.9);cursor:pointer;padding:8px;border-radius:7px;-webkit-tap-highlight-color:transparent;}
+      .mobile-header-title{display:inline-block!important;font-size:17px;font-weight:700;color:#fff;letter-spacing:0.5px;margin-left:4px;}
+      .profile-btn span#userName{display:none;}
+
+      /* Layout */
+      .app-layout{padding-top:56px;}
+      .main-content{margin-left:0!important;}
+      .screen{padding:14px 10px 48px;}
+
+      /* Cards e Forms */
+      .card{padding:14px;margin-bottom:14px;}
+      .card h4{font-size:15px;margin-bottom:10px;}
+      .form-grid{grid-template-columns:1fr!important;gap:10px;}
+      input,select,textarea{font-size:16px!important;padding:12px 14px!important;min-height:46px;}
+      select{min-height:46px;}
+      textarea{min-height:80px;}
+
+      /* Botoes */
+      .btn{min-height:44px;font-size:14px;}
       .btn-primary{min-height:48px;}
-      .list li{flex-direction:column;}
-      .list li .quote-actions{width:100%;}
+      .btn-generate{font-size:15px;padding:14px 20px;}
+
+      /* Listas */
+      .list li{flex-direction:column;gap:10px;}
+      .list li .quote-actions{width:100%;display:flex;flex-wrap:wrap;gap:6px;}
+      .list li .quote-actions button{flex:1;min-width:calc(50% - 3px);font-size:12px;padding:8px 6px;}
+
+      /* Modal */
+      .modal{padding:0;align-items:flex-end;}
+      .modal-box{border-radius:16px 16px 0 0;max-height:92vh;margin:0;padding:16px;}
+      .modal-actions{flex-direction:column;gap:8px;}
+      .modal-actions .btn{width:100%;justify-content:center;}
+
+      /* Tabela itens — cada row vira card empilhado */
+      .items-table thead{display:none!important;}
+      .items-table tbody tr{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important;padding:12px 0!important;border-bottom:1px solid #f3f4f6!important;}
+      .items-table td{padding:0!important;border:none!important;display:block!important;}
+      .items-table td:nth-child(1){grid-column:1/-1!important;}
+      .items-table td:nth-child(4){text-align:left!important;font-weight:700;color:#0d7de0;padding-top:4px!important;}
+      .items-table td:nth-child(5){grid-column:2!important;display:flex!important;align-items:flex-end;justify-content:flex-end;}
+      .items-table input{padding:10px 12px!important;font-size:15px!important;width:100%!important;}
+      .del-item{padding:8px 14px!important;font-size:15px!important;}
+
+      /* Totais */
+      .row-between{flex-direction:column;align-items:flex-start;gap:10px;}
+      .total{font-size:16px;}
+
+      /* Toast */
+      #sp-toast{bottom:80px!important;right:12px!important;left:12px!important;max-width:none!important;}
     }
   </style>
   <title>Início — SoftPrime</title>
