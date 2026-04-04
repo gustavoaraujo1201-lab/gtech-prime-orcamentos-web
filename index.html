@@ -46,7 +46,27 @@
     .sidebar-logout-btn{background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.35);font-size:16px;padding:4px;transition:color 0.2s;border-radius:6px;flex-shrink:0;}
     .sidebar-logout-btn:hover{color:#f87171;background:rgba(248,113,113,0.1);}
     /* ── Plano badge na sidebar ── */
-    .sidebar-plan-badge:hover { opacity: 0.85; transform: translateX(2px); }
+    .sidebar-plan-badge {
+      display:flex !important;
+      align-items:center !important;
+      gap:11px !important;
+      width:100% !important;
+      padding:10px 12px !important;
+      border-radius:8px !important;
+      background:rgba(99,102,241,0.12) !important;
+      border:1px solid rgba(99,102,241,0.25) !important;
+      color:#a5b4fc !important;
+      font-size:13.5px !important;
+      font-weight:600 !important;
+      cursor:pointer !important;
+      font-family:inherit !important;
+      transition:all 0.18s !important;
+      text-align:left !important;
+      margin-bottom:2px !important;
+      text-decoration:none !important;
+      box-sizing:border-box !important;
+    }
+    .sidebar-plan-badge:hover { background:rgba(99,102,241,0.20) !important; opacity:1 !important; transform:none !important; }
     .sidebar-plan-badge-mobile { text-decoration: none; }
 
     .main-content{margin-left:240px;flex:1;min-width:0;padding-top:60px;}
