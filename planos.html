@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planos — SoftPrime Orçamentos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue-deep: #020c1b;
+    --blue-mid: #041830;
+    --accent: #1a8fff;
+    --accent-glow: rgba(26,143,255,0.25);
+    --accent-2: #00d4ff;
+    --gold: #f5c842;
+    --white: #f0f6ff;
+    --muted: rgba(160,200,255,0.55);
+    --card-bg: rgba(10,30,60,0.55);
+    --card-border: rgba(26,143,255,0.18);
+    --radius: 18px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--blue-deep);
+    color: var(--white);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── BACKGROUND ── */
+  #bg-layer {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image: url('bg-login.png');
+    background-size: cover;
+    background-position: center;
+    filter: brightness(0.28) saturate(120%);
+  }
+  #bg-overlay {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(26,143,255,0.12) 0%, transparent 70%),
+                linear-gradient(180deg, rgba(2,12,27,0.5) 0%, rgba(2,12,27,0.85) 100%);
+  }
+  canvas#stars {
+    position: fixed; inset: 0; z-index: 2; pointer-events: none; opacity: 0.6;
+  }
+
+  /* ── LAYOUT ── */
+  .page { position: relative; z-index: 10; }
+
+  /* ── HEADER ── */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 48px;
+    border-bottom: 1px solid rgba(26,143,255,0.1);
+    backdrop-filter: blur(12px);
+    background: rgba(2,12,27,0.4);
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo-mark {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 20px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+  }
+  .header-nav { display: flex; gap: 12px; align-items: center; }
+  .btn-back {
+    padding: 9px 20px; border-radius: 8px;
+    border: 1px solid var(--card-border);
+    background: transparent; color: var(--muted);
+    font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-back:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-login {
+    padding: 9px 20px; border-radius: 8px;
+    background: var(--accent); color: #fff;
+    border: none; font-family: 'DM Sans', sans-serif; font-size: 14px;
+    font-weight: 500; cursor: pointer; transition: all 0.2s;
+    text-decoration: none;
+  }
+  .btn-login:hover { background: #0a7de0; }
+
+  /* ── HERO ── */
+  .hero {
+    text-align: center;
+    padding: 80px 24px 60px;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 7px 16px; border-radius: 100px;
+    border: 1px solid rgba(26,143,255,0.3);
+    background: rgba(26,143,255,0.08);
+    font-size: 13px; color: var(--accent-2);
+    font-weight: 500; margin-bottom: 28px;
+    animation: fadeUp 0.6s ease both;
+  }
+  .hero-badge span { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-2); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(36px, 6vw, 68px);
+    font-weight: 800; line-height: 1.05;
+    letter-spacing: -2px;
+    margin-bottom: 20px;
+    animation: fadeUp 0.6s 0.1s ease both;
+  }
+  .hero h1 em {
+    font-style: normal;
+    background: linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .hero p {
+    font-size: 18px; color: var(--muted); max-width: 520px; margin: 0 auto 36px;
+    line-height: 1.6; animation: fadeUp 0.6s 0.2s ease both;
+  }
+
+  /* Trial banner */
+  .trial-banner {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 12px 24px; border-radius: 12px;
+    background: linear-gradient(135deg, rgba(245,200,66,0.12), rgba(245,200,66,0.05));
+    border: 1px solid rgba(245,200,66,0.3);
+    font-size: 15px; color: var(--gold); font-weight: 500;
+    animation: fadeUp 0.6s 0.3s ease both;
+  }
+  .trial-banner strong { font-weight: 700; }
+
+  /* ── TOGGLE BILLING ── */
+  .billing-toggle {
+    display: flex; align-items: center; justify-content: center; gap: 14px;
+    margin: 52px auto 48px; animation: fadeUp 0.6s 0.35s ease both;
+  }
+  .billing-toggle span { font-size: 14px; color: var(--muted); font-weight: 500; }
+  .billing-toggle span.active { color: var(--white); }
+  .toggle-pill {
+    width: 52px; height: 28px; background: rgba(26,143,255,0.2);
+    border: 1px solid var(--card-border); border-radius: 100px;
+    cursor: pointer; position: relative; transition: all 0.3s;
+  }
+  .toggle-pill::after {
+    content: ''; position: absolute; top: 3px; left: 3px;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--accent); transition: transform 0.3s;
+  }
+  .toggle-pill.annual::after { transform: translateX(24px); }
+  .discount-badge {
+    padding: 3px 8px; border-radius: 100px;
+    background: rgba(245,200,66,0.15); color: var(--gold);
+    font-size: 11px; font-weight: 700; border: 1px solid rgba(245,200,66,0.25);
+  }
+
+  /* ── PLANS GRID ── */
+  .plans-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+    max-width: 1080px; margin: 0 auto; padding: 0 24px;
+    animation: fadeUp 0.6s 0.4s ease both;
+  }
+
+  .plan-card {
+    position: relative;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 36px 32px 32px;
+    backdrop-filter: blur(16px);
+    transition: transform 0.3s, box-shadow 0.3s;
+    overflow: hidden;
+  }
+  .plan-card::before {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(135deg, rgba(26,143,255,0.04) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .plan-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 24px 60px rgba(26,143,255,0.15);
+  }
+
+  /* Popular plan */
+  .plan-card.popular {
+    border-color: var(--accent);
+    background: rgba(26,143,255,0.12);
+    box-shadow: 0 0 0 1px rgba(26,143,255,0.3), 0 20px 60px rgba(26,143,255,0.2);
+  }
+  .plan-card.popular:hover { transform: translateY(-8px); box-shadow: 0 0 0 1px rgba(26,143,255,0.5), 0 30px 80px rgba(26,143,255,0.3); }
+
+  .popular-tag {
+    position: absolute; top: -1px; right: 24px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    color: #fff; font-size: 11px; font-weight: 700;
+    padding: 5px 14px; border-radius: 0 0 10px 10px;
+    letter-spacing: 0.5px; text-transform: uppercase;
+  }
+
+  .plan-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; margin-bottom: 20px;
+    background: rgba(26,143,255,0.1); border: 1px solid var(--card-border);
+  }
+  .plan-card.popular .plan-icon { background: rgba(26,143,255,0.2); border-color: rgba(26,143,255,0.4); }
+  .plan-card.premium .plan-icon { background: rgba(245,200,66,0.1); border-color: rgba(245,200,66,0.25); }
+
+  .plan-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1.5px;
+    color: var(--muted); margin-bottom: 8px;
+  }
+  .plan-card.popular .plan-name { color: var(--accent-2); }
+  .plan-card.premium .plan-name { color: var(--gold); }
+
+  .plan-price-wrap { margin-bottom: 6px; display: flex; align-items: baseline; gap: 4px; }
+  .plan-currency { font-size: 18px; color: var(--muted); font-weight: 500; margin-top: 4px; }
+  .plan-price {
+    font-family: 'Syne', sans-serif;
+    font-size: 52px; font-weight: 800;
+    line-height: 1; letter-spacing: -2px;
+  }
+  .plan-price-period { font-size: 14px; color: var(--muted); }
+  .plan-price-annual { font-size: 13px; color: var(--muted); margin-bottom: 20px; min-height: 20px; }
+  .plan-price-annual s { color: rgba(160,200,255,0.3); margin-right: 4px; }
+  .plan-price-annual .save { color: var(--gold); font-weight: 600; }
+
+  .plan-desc { font-size: 14px; color: var(--muted); line-height: 1.6; margin-bottom: 28px; }
+
+  /* CTA */
+  .btn-plan {
+    width: 100%; padding: 14px;
+    border-radius: 10px; font-family: 'DM Sans', sans-serif;
+    font-size: 15px; font-weight: 600; cursor: pointer;
+    transition: all 0.25s; border: none; margin-bottom: 28px;
+    letter-spacing: 0.2px;
+  }
+  .btn-plan-outline {
+    background: transparent;
+    border: 1px solid var(--card-border);
+    color: var(--white);
+  }
+  .btn-plan-outline:hover { border-color: var(--accent); color: var(--accent); background: rgba(26,143,255,0.06); }
+  .btn-plan-primary {
+    background: linear-gradient(135deg, var(--accent), #0a6dc7);
+    color: #fff;
+    box-shadow: 0 8px 24px rgba(26,143,255,0.3);
+  }
+  .btn-plan-primary:hover { box-shadow: 0 12px 32px rgba(26,143,255,0.5); transform: translateY(-1px); }
+  .btn-plan-premium {
+    background: linear-gradient(135deg, #b8860b, var(--gold));
+    color: #020c1b;
+    box-shadow: 0 8px 24px rgba(245,200,66,0.25);
+  }
+  .btn-plan-premium:hover { box-shadow: 0 12px 32px rgba(245,200,66,0.4); transform: translateY(-1px); }
+
+  /* Features */
+  .plan-features { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+  .plan-features li {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 14px; color: rgba(200,230,255,0.75); line-height: 1.45;
+  }
+  .feat-check {
+    width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700;
+  }
+  .feat-check.yes { background: rgba(26,143,255,0.2); color: var(--accent); border: 1px solid rgba(26,143,255,0.3); }
+  .feat-check.gold { background: rgba(245,200,66,0.15); color: var(--gold); border: 1px solid rgba(245,200,66,0.3); }
+  .feat-check.no { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.06); }
+  .plan-features li.disabled { opacity: 0.35; }
+
+  .feat-divider {
+    width: 100%; height: 1px;
+    background: rgba(26,143,255,0.1);
+    margin: 4px 0;
+  }
+
+  /* ── FAQ / TRIAL SECTION ── */
+  .trial-section {
+    text-align: center;
+    padding: 72px 24px 48px;
+    max-width: 680px; margin: 0 auto;
+    animation: fadeUp 0.6s 0.5s ease both;
+  }
+  .trial-section h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px; font-weight: 800;
+    letter-spacing: -1px; margin-bottom: 16px;
+  }
+  .trial-section p { color: var(--muted); font-size: 16px; line-height: 1.7; margin-bottom: 32px; }
+  .trial-steps {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 20px; margin-bottom: 40px;
+  }
+  .trial-step {
+    background: var(--card-bg); border: 1px solid var(--card-border);
+    border-radius: 14px; padding: 24px 20px;
+    backdrop-filter: blur(12px);
+  }
+  .step-num {
+    font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+  .trial-step h4 { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .trial-step p { font-size: 13px; color: var(--muted); margin: 0; }
+
+  /* ── GUARANTEE ── */
+  .guarantee {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    padding: 14px 28px; border-radius: 12px;
+    background: rgba(26,143,255,0.06); border: 1px solid rgba(26,143,255,0.15);
+    max-width: 420px; margin: 0 auto;
+    font-size: 14px; color: var(--muted);
+  }
+  .guarantee span.shield { font-size: 22px; }
+
+  /* ── FOOTER ── */
+  footer {
+    text-align: center; padding: 32px 24px;
+    border-top: 1px solid rgba(26,143,255,0.08);
+    color: rgba(160,200,255,0.3); font-size: 13px;
+    margin-top: 60px;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .plans-grid { grid-template-columns: 1fr; max-width: 440px; }
+    .plan-card.popular { order: -1; }
+    .trial-steps { grid-template-columns: 1fr; }
+    header { padding: 18px 20px; }
+    .hero { padding: 60px 20px 40px; }
+  }
+  @media (max-width: 600px) {
+    .hero h1 { letter-spacing: -1.5px; }
+    .plan-price { font-size: 44px; }
+  }
+
+  /* Loading overlay */
+  #mp-loading {
+    display: none; position: fixed; inset: 0; z-index: 999;
+    background: rgba(2,12,27,0.85); backdrop-filter: blur(8px);
+    align-items: center; justify-content: center; flex-direction: column; gap: 16px;
+  }
+  #mp-loading.show { display: flex; }
+  .spinner {
+    width: 44px; height: 44px; border-radius: 50%;
+    border: 3px solid rgba(26,143,255,0.2);
+    border-top-color: var(--accent);
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- Backgrounds -->
+<div id="bg-layer"></div>
+<div id="bg-overlay"></div>
+<canvas id="stars"></canvas>
+
+<!-- Loading MP -->
+<div id="mp-loading">
+  <div class="spinner"></div>
+  <p style="color:var(--muted);font-size:15px;">Redirecionando para o Mercado Pago…</p>
+</div>
+
+<div class="page">
+  <!-- Header -->
+  <header>
+    <div class="logo-mark">⚡ SoftPrime</div>
+    <nav class="header-nav">
+      <a href="login.html" class="btn-back">← Voltar</a>
+      <a href="login.html" class="btn-login">Entrar</a>
+    </nav>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-badge"><span></span> Planos & Preços</div>
+    <h1>Escolha o plano<br><em>ideal para você</em></h1>
+    <p>Comece grátis por 7 dias. Sem cartão de crédito necessário. Cancele quando quiser.</p>
+    <div class="trial-banner">🎁 <strong>7 dias grátis</strong> em qualquer plano — sem cobrança imediata</div>
+
+    <!-- Billing toggle -->
+    <div class="billing-toggle">
+      <span id="lbl-monthly" class="active">Mensal</span>
+      <div class="toggle-pill" id="billingToggle" onclick="toggleBilling()"></div>
+      <span id="lbl-annual">Anual</span>
+      <span class="discount-badge">−20%</span>
+    </div>
+  </section>
+
+  <!-- Plans -->
+  <div class="plans-grid">
+
+    <!-- BÁSICO -->
+    <div class="plan-card" id="card-basic">
+      <div class="plan-icon">📄</div>
+      <div class="plan-name">Básico</div>
+      <div class="plan-price-wrap">
+        <span class="plan-currency">R$</span>
+        <span class="plan-price" id="price-basic">29</span>
+        <span class="plan-price-period">,90/mês</span>
+      </div>
+      <div class="plan-price-annual" id="annual-basic"></div>
+      <p class="plan-desc">Para autônomos e pequenos negócios que precisam de agilidade.</p>
+      <button class="btn-plan btn-plan-outline" onclick="startCheckout('basic')">Começar grátis →</button>
+      <ul class="plan-features">
+        <li><span class="feat-check yes">✓</span> Criar orçamentos ilimitados</li>
+        <li><span class="feat-check yes">✓</span> Cadastro de clientes e emissores</li>
+        <li><span class="feat-check yes">✓</span> Impressão básica (PDF do browser)</li>
+        <li><span class="feat-check yes">✓</span> Histórico de orçamentos</li>
+        <li><span class="feat-check yes">✓</span> Acesso web e mobile</li>
+        <div class="feat-divider"></div>
+        <li class="disabled"><span class="feat-check no">✕</span> PDF com logo personalizada</li>
+        <li class="disabled"><span class="feat-check no">✕</span> Exportação Word (.docx)</li>
+        <li class="disabled"><span class="feat-check no">✕</span> Suporte prioritário</li>
+      </ul>
+    </div>
+
+    <!-- INTERMEDIÁRIO (popular) -->
+    <div class="plan-card popular" id="card-pro">
+      <div class="popular-tag">⚡ Mais popular</div>
+      <div class="plan-icon">🚀</div>
+      <div class="plan-name">Intermediário</div>
+      <div class="plan-price-wrap">
+        <span class="plan-currency">R$</span>
+        <span class="plan-price" id="price-pro">49</span>
+        <span class="plan-price-period">,90/mês</span>
+      </div>
+      <div class="plan-price-annual" id="annual-pro"></div>
+      <p class="plan-desc">Para quem quer mais profissionalismo nos orçamentos enviados.</p>
+      <button class="btn-plan btn-plan-primary" onclick="startCheckout('pro')">Começar grátis →</button>
+      <ul class="plan-features">
+        <li><span class="feat-check yes">✓</span> Tudo do Básico</li>
+        <li><span class="feat-check yes">✓</span> PDF com logo personalizada</li>
+        <li><span class="feat-check yes">✓</span> Múltiplos modelos de PDF</li>
+        <li><span class="feat-check yes">✓</span> Campos extras (validade, obs.)</li>
+        <li><span class="feat-check yes">✓</span> Acesso web e mobile</li>
+        <div class="feat-divider"></div>
+        <li class="disabled"><span class="feat-check no">✕</span> Exportação Word (.docx)</li>
+        <li class="disabled"><span class="feat-check no">✕</span> Suporte prioritário</li>
+      </ul>
+    </div>
+
+    <!-- PREMIUM -->
+    <div class="plan-card premium" id="card-premium">
+      <div class="plan-icon">👑</div>
+      <div class="plan-name">Premium</div>
+      <div class="plan-price-wrap">
+        <span class="plan-currency">R$</span>
+        <span class="plan-price" id="price-premium">79</span>
+        <span class="plan-price-period">,90/mês</span>
+      </div>
+      <div class="plan-price-annual" id="annual-premium"></div>
+      <p class="plan-desc">Tudo liberado. Para negócios em crescimento que não aceitam limites.</p>
+      <button class="btn-plan btn-plan-premium" onclick="startCheckout('premium')">Começar grátis →</button>
+      <ul class="plan-features">
+        <li><span class="feat-check gold">✓</span> Tudo do Intermediário</li>
+        <li><span class="feat-check gold">✓</span> Exportação Word (.docx)</li>
+        <li><span class="feat-check gold">✓</span> Exportação Excel (.xlsx)</li>
+        <li><span class="feat-check gold">✓</span> Suporte prioritário (WhatsApp)</li>
+        <li><span class="feat-check gold">✓</span> Acesso antecipado a novidades</li>
+        <li><span class="feat-check gold">✓</span> Backup automático na nuvem</li>
+        <li><span class="feat-check gold">✓</span> Sem marca d'água nos documentos</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <!-- Como funciona o trial -->
+  <section class="trial-section">
+    <h2>Como funciona o período grátis?</h2>
+    <p>Você começa a usar imediatamente, sem precisar informar cartão. Só cobramos ao final dos 7 dias, caso queira continuar.</p>
+    <div class="trial-steps">
+      <div class="trial-step">
+        <div class="step-num">01</div>
+        <h4>Crie sua conta</h4>
+        <p>Cadastro rápido, sem cartão de crédito necessário.</p>
+      </div>
+      <div class="trial-step">
+        <div class="step-num">02</div>
+        <h4>Use por 7 dias</h4>
+        <p>Acesso completo ao plano escolhido sem nenhum custo.</p>
+      </div>
+      <div class="trial-step">
+        <div class="step-num">03</div>
+        <h4>Assine ou cancele</h4>
+        <p>Ao final do trial, escolha continuar ou cancele sem burocracia.</p>
+      </div>
+    </div>
+    <div class="guarantee">
+      <span class="shield">🛡️</span>
+      <span>Garantia de 7 dias — insatisfeito? Devolvemos seu dinheiro.</span>
+    </div>
+  </section>
+
+  <footer>
+    <p>© 2025 SoftPrime — <a href="login.html">Entrar no sistema</a> · Dúvidas? <a href="mailto:suporte@softprime.com.br">suporte@softprime.com.br</a></p>
+  </footer>
+</div>
+
+<script>
+// ── Stars canvas ──
+(function() {
+  const c = document.getElementById('stars');
+  const ctx = c.getContext('2d');
+  let W, H, stars = [];
+  function resize() {
+    W = c.width = window.innerWidth;
+    H = c.height = window.innerHeight;
+  }
+  window.addEventListener('resize', resize); resize();
+  for(let i=0;i<120;i++) stars.push({
+    x: Math.random()*2000, y: Math.random()*2000,
+    r: Math.random()*1.2+0.2, a: Math.random(), va: (Math.random()-0.5)*0.005
+  });
+  function frame() {
+    ctx.clearRect(0,0,W,H);
+    stars.forEach(s => {
+      s.a = Math.max(0.05, Math.min(0.9, s.a + s.va));
+      if(s.a<=0.05||s.a>=0.9) s.va *= -1;
+      ctx.beginPath();
+      ctx.arc(s.x%W, s.y%H, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(180,220,255,${s.a})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+
+// ── Billing toggle ──
+let isAnnual = false;
+const prices = {
+  basic:   { monthly: '29,90', annual: '23,92' },
+  pro:     { monthly: '49,90', annual: '39,92' },
+  premium: { monthly: '79,90', annual: '63,92' }
+};
+
+function toggleBilling() {
+  isAnnual = !isAnnual;
+  const pill = document.getElementById('billingToggle');
+  pill.classList.toggle('annual', isAnnual);
+  document.getElementById('lbl-monthly').classList.toggle('active', !isAnnual);
+  document.getElementById('lbl-annual').classList.toggle('active', isAnnual);
+
+  ['basic','pro','premium'].forEach(key => {
+    const p = prices[key];
+    const [reais, cents] = (isAnnual ? p.annual : p.monthly).split(',');
+    document.getElementById(`price-${key}`).textContent = reais;
+    const annualEl = document.getElementById(`annual-${key}`);
+    if(isAnnual) {
+      annualEl.innerHTML = `<s>R$ ${p.monthly}/mês</s> <span class="save">Economia de 20%</span>`;
+    } else {
+      annualEl.innerHTML = '';
+    }
+  });
+}
+
+// ── Checkout MP ──
+// 🔧 CONFIGURAÇÃO: substitua as URLs abaixo pelos links reais do Mercado Pago
+// Crie os planos em: https://www.mercadopago.com.br/subscription-plans/list
+const MP_LINKS = {
+  basic: {
+    monthly: 'https://mpago.la/SEU_LINK_BASICO_MENSAL',
+    annual:  'https://mpago.la/SEU_LINK_BASICO_ANUAL'
+  },
+  pro: {
+    monthly: 'https://mpago.la/SEU_LINK_PRO_MENSAL',
+    annual:  'https://mpago.la/SEU_LINK_PRO_ANUAL'
+  },
+  premium: {
+    monthly: 'https://mpago.la/SEU_LINK_PREMIUM_MENSAL',
+    annual:  'https://mpago.la/SEU_LINK_PREMIUM_ANUAL'
+  }
+};
+
+function startCheckout(plan) {
+  const period = isAnnual ? 'annual' : 'monthly';
+  const url = MP_LINKS[plan][period];
+
+  // Exibe loading
+  document.getElementById('mp-loading').classList.add('show');
+
+  // Salva plano escolhido no localStorage para uso após retorno
+  localStorage.setItem('pendingPlan', plan);
+  localStorage.setItem('pendingPeriod', period);
+
+  // Pequeno delay visual antes de redirecionar
+  setTimeout(() => {
+    window.location.href = url;
+  }, 900);
+}
+</script>
+</body>
+</html>
