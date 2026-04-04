@@ -65,8 +65,23 @@
       margin-bottom:2px !important;
       text-decoration:none !important;
       box-sizing:border-box !important;
+      line-height:1.2 !important;
+      min-height:unset !important;
     }
     .sidebar-plan-badge:hover { background:rgba(99,102,241,0.20) !important; opacity:1 !important; transform:none !important; }
+    /* Neutraliza estilos inline gerados pelo auth.js nos filhos do badge */
+    .sidebar-plan-badge * {
+      line-height:1.2 !important;
+      margin:0 !important;
+      padding:0 !important;
+    }
+    .sidebar-plan-badge > span:first-child,
+    .sidebar-plan-badge > div:first-child {
+      flex-shrink:0 !important;
+      font-size:17px !important;
+      width:22px !important;
+      text-align:center !important;
+    }
     .sidebar-plan-badge-mobile { text-decoration: none; }
 
     .main-content{margin-left:240px;flex:1;min-width:0;padding-top:60px;}
