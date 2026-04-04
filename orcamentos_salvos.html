@@ -46,7 +46,7 @@
     .sidebar-logout-btn{background:none;border:none;cursor:pointer;color:rgba(255,255,255,0.35);font-size:16px;padding:4px;transition:color 0.2s;border-radius:6px;flex-shrink:0;}
     .sidebar-logout-btn:hover{color:#f87171;background:rgba(248,113,113,0.1);}
     /* ── Plano badge na sidebar ── */
-    .sidebar-plan-badge:hover { opacity: 0.85; transform: translateX(2px); }
+    .sidebar-plan-badge:hover { opacity: 0.85; }
     .sidebar-plan-badge-mobile { text-decoration: none; }
 
     .main-content{margin-left:240px;flex:1;min-width:0;padding-top:60px;}
@@ -278,19 +278,12 @@
           <span class="nav-icon">💼</span>
           <span>Orçamentos Salvos</span>
         </a>
-        <a href="planos.html" class="sidebar-btn" id="navPlanos">
-          <span class="nav-icon">⚡</span>
-          <span>Meu Plano</span>
-        </a>
         <div class="sidebar-mobile-profile" id="sidebarMobileProfile">
           <div class="sidebar-section-label" style="margin-top:24px;">Conta</div>
           <div class="sidebar-profile-info" style="display:flex;align-items:center;gap:10px;padding:8px 12px;margin-bottom:4px;">
             <div id="sidebarProfileAvatar" style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">?</div>
             <div id="sidebarProfileName" style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.8);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Carregando...</div>
           </div>
-          <a href="planos.html" class="sidebar-btn" id="navPlanosMobile">
-            <span class="nav-icon">⚡</span><span>Meu Plano</span>
-          </a>
           <button class="sidebar-btn" onclick="if(window.authManager) window.authManager.signOut();">
             <span class="nav-icon">🚪</span><span>Sair da conta</span>
           </button>
