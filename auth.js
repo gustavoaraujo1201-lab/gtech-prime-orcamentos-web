@@ -166,6 +166,9 @@ class AuthManager {
     // Remove guard imediatamente — libera a tela
     this._removeGuard();
 
+    // Inicializa verificação de plano/trial
+    if (window.PlanGuard) window.PlanGuard.init();
+
     // Injeta badge do plano na sidebar (desktop e mobile)
     this._renderPlanBadge();
 
