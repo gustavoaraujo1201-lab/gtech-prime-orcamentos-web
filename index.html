@@ -393,7 +393,7 @@
           <!-- Input file oculto -->
           <input type="file" id="avatarFileInput" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none;" />
           <!-- Dropdown menu de opções -->
-          <div id="avatarDropdown" style="display:none;position:absolute;top:88px;left:50%;transform:translateX(-50%);background:#1e293b;border:1px solid rgba(255,255,255,0.12);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,0.5);z-index:9999;min-width:170px;overflow:hidden;animation:avatarMenuIn 0.18s cubic-bezier(.34,1.56,.64,1) both;">
+          <div id="avatarDropdown" style="display:none;position:absolute;top:84px;left:0;background:#1e293b;border:1px solid rgba(255,255,255,0.12);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,0.5);z-index:9999;min-width:175px;overflow:hidden;animation:avatarMenuIn 0.18s cubic-bezier(.34,1.56,.64,1) both;">
             <div id="avatarOptInsert" style="display:flex;align-items:center;gap:10px;padding:11px 16px;cursor:pointer;color:rgba(255,255,255,0.85);font-size:13.5px;font-weight:500;transition:background 0.15s;">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="3"/></svg>
               Inserir imagem
@@ -410,8 +410,8 @@
         </div>
         <style>
           @keyframes avatarMenuIn {
-            from { opacity:0; transform:translateX(-50%) translateY(-6px) scale(0.96); }
-            to   { opacity:1; transform:translateX(-50%) translateY(0) scale(1); }
+            from { opacity:0; transform:translateY(-6px) scale(0.96); }
+            to   { opacity:1; transform:translateY(0) scale(1); }
           }
           #avatarOptInsert:hover, #avatarOptChange:hover { background:rgba(255,255,255,0.07); }
           #avatarOptRemove:hover { background:rgba(248,113,113,0.1); }
