@@ -393,7 +393,10 @@
         <div>
           <div id="profileModalName" style="font-size:18px;font-weight:700;color:#fff;margin-bottom:3px;">Carregando...</div>
           <div id="profileModalEmail" style="font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:6px;"></div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.5);">Clique na foto para alterar</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <div style="font-size:11px;color:rgba(255,255,255,0.5);">Clique na foto para alterar</div>
+            <button id="removeAvatarBtn" style="display:none;font-size:11px;color:rgba(255,130,130,0.9);background:rgba(255,60,60,0.15);border:1px solid rgba(255,100,100,0.3);border-radius:20px;padding:2px 10px;cursor:pointer;font-family:inherit;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,60,60,0.28)'" onmouseout="this.style.background='rgba(255,60,60,0.15)'">✕ Remover foto</button>
+          </div>
         </div>
       </div>
       <div style="margin-bottom:20px;">
@@ -511,17 +514,16 @@
       auth.getSupabase().from('profiles').select('username,full_name').eq('id',user.id).single()
         .then(({data:profile}) => {
           const displayName = profile?.username||profile?.full_name||email.split('@')[0];
-          document.getElementById('profileModalAvatar').textContent = getInitials(displayName);
           document.getElementById('profileModalName').textContent   = displayName;
           document.getElementById('profileModalEmail').textContent  = email;
           document.getElementById('newUsernameInput').value         = displayName;
-          document.getElementById('profileAvatar').textContent      = getInitials(displayName);
+          setAvatarInitials(getInitials(displayName));
         })
         .catch(() => {
           const fallback = email.split('@')[0];
-          document.getElementById('profileModalAvatar').textContent = getInitials(fallback);
           document.getElementById('profileModalName').textContent   = fallback;
           document.getElementById('profileModalEmail').textContent  = email;
+          setAvatarInitials(getInitials(fallback));
         });
     }
 
@@ -539,9 +541,8 @@
         const {error} = await auth.getSupabase().from('profiles').upsert({id:auth.currentUser.id,email:auth.currentUser.email,username:newName,updated_at:new Date().toISOString()});
         if (error) throw error;
         document.getElementById('userName').textContent=newName;
-        document.getElementById('profileAvatar').textContent=getInitials(newName);
-        document.getElementById('profileModalAvatar').textContent=getInitials(newName);
         document.getElementById('profileModalName').textContent=newName;
+        setAvatarInitials(getInitials(newName));
         showMsg('usernameMsg','✅ Nome atualizado!',true);
       } catch(err) { showMsg('usernameMsg','❌ '+(err.message||'Erro ao salvar.'),false); }
       finally { btn.disabled=false; btn.textContent='Salvar'; }
@@ -575,14 +576,14 @@
       } finally { btn.disabled=false; btn.textContent='🔒 Alterar Senha'; }
     });
 
-    // Avatar
+    // Avatar iniciais + foto
     const _avatarInit = setInterval(() => {
       const nameEl=document.getElementById('userName');
       if (nameEl&&nameEl.textContent&&nameEl.textContent.trim().length>0) {
         const name=nameEl.textContent.trim();
-        document.getElementById('profileAvatar').textContent=getInitials(name);
         const sa=document.getElementById('sidebarProfileAvatar'); if(sa) sa.textContent=getInitials(name);
         const sn=document.getElementById('sidebarProfileName'); if(sn) sn.textContent=name;
+        setAvatarInitials(getInitials(name));
         clearInterval(_avatarInit);
       }
     }, 300);
@@ -598,36 +599,73 @@
       avatarClickArea.addEventListener('click', () => avatarFileInput.click());
     }
 
+    // ── Helpers de avatar: aplica iniciais ou foto ──
+    function setAvatarInitials(initials) {
+      // Só aplica iniciais se NÃO tiver foto salva
+      const auth = window.authManager;
+      const savedPhoto = auth && auth.currentUser
+        ? localStorage.getItem('sp_avatar_' + auth.currentUser.id) : null;
+      if (savedPhoto) { applyAvatarPhoto(savedPhoto); return; }
+
+      const els = [
+        document.getElementById('profileModalAvatar'),
+        document.getElementById('profileAvatar'),
+        document.getElementById('sidebarProfileAvatar')
+      ];
+      els.forEach(el => {
+        if (!el) return;
+        el.textContent = initials;
+        el.style.backgroundImage = '';
+        el.style.background = '';
+      });
+      // Esconde botão remover
+      const removeBtn = document.getElementById('removeAvatarBtn');
+      if (removeBtn) removeBtn.style.display = 'none';
+    }
+
     // ── Função para aplicar foto em todos os avatares da UI ──
     function applyAvatarPhoto(base64) {
-      // Modal
-      const modalAv = document.getElementById('profileModalAvatar');
-      if (modalAv) {
-        modalAv.textContent = '';
-        modalAv.style.background = 'transparent';
-        modalAv.style.backgroundImage = `url(${base64})`;
-        modalAv.style.backgroundSize = 'cover';
-        modalAv.style.backgroundPosition = 'center';
-      }
-      // Header (pequeno)
-      const headerAv = document.getElementById('profileAvatar');
-      if (headerAv) {
-        headerAv.textContent = '';
-        headerAv.style.background = 'transparent';
-        headerAv.style.backgroundImage = `url(${base64})`;
-        headerAv.style.backgroundSize = 'cover';
-        headerAv.style.backgroundPosition = 'center';
-      }
-      // Sidebar mobile
-      const sidebarAv = document.getElementById('sidebarProfileAvatar');
-      if (sidebarAv) {
-        sidebarAv.textContent = '';
-        sidebarAv.style.background = 'transparent';
-        sidebarAv.style.backgroundImage = `url(${base64})`;
-        sidebarAv.style.backgroundSize = 'cover';
-        sidebarAv.style.backgroundPosition = 'center';
-      }
+      const ids = ['profileModalAvatar','profileAvatar','sidebarProfileAvatar'];
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = '';                          // remove iniciais
+        el.style.backgroundImage = `url(${base64})`;
+        el.style.backgroundSize = 'cover';
+        el.style.backgroundPosition = 'center';
+        el.style.background = `url(${base64}) center/cover no-repeat`;
+      });
+      // Mostra botão remover
+      const removeBtn = document.getElementById('removeAvatarBtn');
+      if (removeBtn) removeBtn.style.display = 'inline-block';
     }
+
+    // ── Remove a foto de perfil ──
+    function removeAvatarPhoto() {
+      const auth = window.authManager;
+      if (auth && auth.currentUser) {
+        localStorage.removeItem('sp_avatar_' + auth.currentUser.id);
+      }
+      // Restaura iniciais
+      const nameEl = document.getElementById('userName');
+      const name = nameEl ? nameEl.textContent.trim() : '';
+      const initials = getInitials(name) || '?';
+
+      const ids = ['profileModalAvatar','profileAvatar','sidebarProfileAvatar'];
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = initials;
+        el.style.backgroundImage = '';
+        el.style.background = '';
+      });
+      // Esconde botão remover
+      const removeBtn = document.getElementById('removeAvatarBtn');
+      if (removeBtn) removeBtn.style.display = 'none';
+      showMsg('usernameMsg', '✅ Foto de perfil removida!', true);
+      document.getElementById('usernameMsg').style.display = 'block';
+    }
+    window.removeAvatarPhoto = removeAvatarPhoto;
 
     // ── Carrega foto salva ao abrir o modal ──
     const _origOpenProfileModal = openProfileModal;

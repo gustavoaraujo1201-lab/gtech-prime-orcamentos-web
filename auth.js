@@ -366,28 +366,32 @@ class AuthManager {
     // Monta o HTML do badge
     const badgeHtml = cfg
       ? `<a href="planos.html" class="sidebar-plan-badge" title="Meu plano: ${cfg.label}" style="
-            display:flex;align-items:center;gap:8px;
-            padding:9px 12px;margin:0 12px 8px;
-            border-radius:8px;border:1px solid ${cfg.border};
-            background:${cfg.bg};text-decoration:none;
-            transition:all 0.2s;cursor:pointer;
-          ">
-          <span style="font-size:15px;">${cfg.icon}</span>
-          <div style="flex:1;min-width:0;">
+            display:flex;align-items:center;gap:11px;
+            width:100%;padding:10px 12px;margin:0 0 2px;
+            border-radius:8px;border:1px solid transparent;
+            background:transparent;text-decoration:none;
+            box-sizing:border-box;transition:all 0.2s;cursor:pointer;
+          "
+          onmouseover="this.style.background='${cfg.bg}';this.style.borderColor='${cfg.border}';"
+          onmouseout="this.style.background='transparent';this.style.borderColor='transparent';">
+          <span style="font-size:17px;width:22px;text-align:center;flex-shrink:0;line-height:1;">${cfg.icon}</span>
+          <div style="flex:1;min-width:0;line-height:1.2;">
             <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.8px;line-height:1;">Plano ativo</div>
             <div style="font-size:13px;font-weight:600;color:${cfg.color};margin-top:2px;line-height:1;">${cfg.label}</div>
           </div>
-          <span style="font-size:10px;color:rgba(255,255,255,0.3);">›</span>
+          <span style="font-size:10px;color:rgba(255,255,255,0.3);flex-shrink:0;">›</span>
         </a>`
       : `<a href="planos.html" class="sidebar-plan-badge" title="Escolha um plano" style="
-            display:flex;align-items:center;gap:8px;
-            padding:9px 12px;margin:0 12px 8px;
-            border-radius:8px;border:1px solid rgba(251,191,36,0.35);
-            background:rgba(251,191,36,0.08);text-decoration:none;
-            transition:all 0.2s;cursor:pointer;
-          ">
-          <span style="font-size:15px;">⚡</span>
-          <div style="flex:1;min-width:0;">
+            display:flex;align-items:center;gap:11px;
+            width:100%;padding:10px 12px;margin:0 0 2px;
+            border-radius:8px;border:1px solid transparent;
+            background:transparent;text-decoration:none;
+            box-sizing:border-box;transition:all 0.2s;cursor:pointer;
+          "
+          onmouseover="this.style.background='rgba(251,191,36,0.08)';this.style.borderColor='rgba(251,191,36,0.35)';"
+          onmouseout="this.style.background='transparent';this.style.borderColor='transparent';">
+          <span style="font-size:17px;width:22px;text-align:center;flex-shrink:0;line-height:1;">⚡</span>
+          <div style="flex:1;min-width:0;line-height:1.2;">
             <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.8px;line-height:1;">Sem plano</div>
             <div style="font-size:12px;font-weight:600;color:#fbbf24;margin-top:2px;line-height:1;">Ver planos →</div>
           </div>
