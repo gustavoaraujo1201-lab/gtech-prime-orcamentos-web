@@ -264,9 +264,14 @@ class AuthManager {
     } catch (err) {
       console.error('❌ Erro no cadastro:', err);
       let msg = err.message || 'Erro desconhecido';
-      if (msg.includes('Failed to fetch'))             msg = 'Erro de conexão. Verifique sua internet.';
-      if (msg.includes('User already registered'))     msg = 'Este email já está cadastrado.';
-      if (msg.includes('Password should be at least')) msg = 'A senha deve ter pelo menos 6 caracteres.';
+      if (msg.includes('Failed to fetch'))                    msg = 'Erro de conexão. Verifique sua internet.';
+      if (msg.includes('User already registered'))            msg = 'Este email já está cadastrado.';
+      if (msg.includes('Password should be at least'))        msg = 'A senha deve ter pelo menos 6 caracteres.';
+      if (msg.includes('Password should contain'))            msg = 'A senha deve conter letras maiúsculas, minúsculas, números e um caractere especial (ex: Senha@123).';
+      if (msg.includes('should contain at least one'))        msg = 'A senha deve conter letras maiúsculas, minúsculas, números e um caractere especial (ex: Senha@123).';
+      if (msg.includes('weak'))                               msg = 'Senha muito fraca. Use letras maiúsculas, minúsculas, números e caractere especial.';
+      if (msg.includes('rate limit'))                         msg = 'Muitas tentativas. Aguarde alguns minutos e tente novamente.';
+      if (msg.includes('Email address') && msg.includes('invalid')) msg = 'Endereço de email inválido.';
       return { success: false, message: `❌ ${msg}` };
     }
   }
@@ -306,9 +311,12 @@ class AuthManager {
     } catch (err) {
       console.error('❌ Erro no login:', err);
       let msg = err.message || 'Erro desconhecido';
-      if (msg.includes('Invalid login credentials')) msg = 'Email/usuário ou senha incorretos.';
-      if (msg.includes('Email not confirmed'))       msg = 'Confirme seu email antes de fazer login.';
-      if (msg.includes('Failed to fetch'))           msg = 'Erro de conexão. Verifique sua internet.';
+      if (msg.includes('Invalid login credentials'))          msg = 'Email/usuário ou senha incorretos.';
+      if (msg.includes('Email not confirmed'))                msg = 'Confirme seu email antes de fazer login.';
+      if (msg.includes('Failed to fetch'))                    msg = 'Erro de conexão. Verifique sua internet.';
+      if (msg.includes('rate limit'))                         msg = 'Muitas tentativas. Aguarde alguns minutos.';
+      if (msg.includes('User not found'))                     msg = 'Usuário não encontrado.';
+      if (msg.includes('too many requests'))                  msg = 'Muitas tentativas. Tente novamente em alguns minutos.';
       return { success: false, message: `❌ ${msg}` };
     }
   }
@@ -358,31 +366,27 @@ class AuthManager {
     // Monta o HTML do badge
     const badgeHtml = cfg
       ? `<a href="planos.html" class="sidebar-plan-badge" title="Meu plano: ${cfg.label}" style="
-            display:flex;align-items:center;gap:11px;
-            width:100%;padding:10px 12px;margin:0 0 2px;
-            border-radius:8px;border:1px solid transparent;
-            background:transparent;text-decoration:none;
-            box-sizing:border-box;transition:all 0.2s;cursor:pointer;
-          "
-          onmouseover="this.style.background='${cfg.bg}';this.style.borderColor='${cfg.border}';"
-          onmouseout="this.style.background='transparent';this.style.borderColor='transparent';">
-          <span style="font-size:17px;width:22px;text-align:center;flex-shrink:0;">${cfg.icon}</span>
+            display:flex;align-items:center;gap:8px;
+            padding:9px 12px;margin:0 12px 8px;
+            border-radius:8px;border:1px solid ${cfg.border};
+            background:${cfg.bg};text-decoration:none;
+            transition:all 0.2s;cursor:pointer;
+          ">
+          <span style="font-size:15px;">${cfg.icon}</span>
           <div style="flex:1;min-width:0;">
             <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.8px;line-height:1;">Plano ativo</div>
             <div style="font-size:13px;font-weight:600;color:${cfg.color};margin-top:2px;line-height:1;">${cfg.label}</div>
           </div>
-          <span style="font-size:10px;color:rgba(255,255,255,0.3);flex-shrink:0;">›</span>
+          <span style="font-size:10px;color:rgba(255,255,255,0.3);">›</span>
         </a>`
       : `<a href="planos.html" class="sidebar-plan-badge" title="Escolha um plano" style="
-            display:flex;align-items:center;gap:11px;
-            width:100%;padding:10px 12px;margin:0 0 2px;
-            border-radius:8px;border:1px solid transparent;
-            background:transparent;text-decoration:none;
-            box-sizing:border-box;transition:all 0.2s;cursor:pointer;
-          "
-          onmouseover="this.style.background='rgba(251,191,36,0.08)';this.style.borderColor='rgba(251,191,36,0.35)';"
-          onmouseout="this.style.background='transparent';this.style.borderColor='transparent';">
-          <span style="font-size:17px;width:22px;text-align:center;flex-shrink:0;">⚡</span>
+            display:flex;align-items:center;gap:8px;
+            padding:9px 12px;margin:0 12px 8px;
+            border-radius:8px;border:1px solid rgba(251,191,36,0.35);
+            background:rgba(251,191,36,0.08);text-decoration:none;
+            transition:all 0.2s;cursor:pointer;
+          ">
+          <span style="font-size:15px;">⚡</span>
           <div style="flex:1;min-width:0;">
             <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.8px;line-height:1;">Sem plano</div>
             <div style="font-size:12px;font-weight:600;color:#fbbf24;margin-top:2px;line-height:1;">Ver planos →</div>

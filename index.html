@@ -564,7 +564,13 @@
         showMsg('passwordMsg','✅ Senha alterada com sucesso!',true);
       } catch(err) {
         let msg=err.message||'Erro ao alterar senha.';
-        if(msg.includes('same password')) msg='A nova senha deve ser diferente da atual.';
+        if(msg.includes('same password'))                    msg='A nova senha deve ser diferente da atual.';
+        if(msg.includes('Password should contain'))          msg='A senha deve conter letras maiúsculas, minúsculas, números e um caractere especial (ex: Senha@123).';
+        if(msg.includes('should contain at least one'))      msg='A senha deve conter letras maiúsculas, minúsculas, números e um caractere especial (ex: Senha@123).';
+        if(msg.includes('Password should be at least'))      msg='A senha deve ter pelo menos 6 caracteres.';
+        if(msg.includes('weak'))                             msg='Senha muito fraca. Use letras maiúsculas, minúsculas, números e um caractere especial.';
+        if(msg.includes('rate limit') || msg.includes('too many')) msg='Muitas tentativas. Aguarde alguns minutos.';
+        if(msg.includes('Failed to fetch'))                  msg='Erro de conexão. Verifique sua internet.';
         showMsg('passwordMsg','❌ '+msg,false);
       } finally { btn.disabled=false; btn.textContent='🔒 Alterar Senha'; }
     });
