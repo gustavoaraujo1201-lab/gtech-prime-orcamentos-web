@@ -382,10 +382,18 @@
     <div class="modal-box" style="max-width:480px;">
       <button class="modal-close" id="closeProfileModal">×</button>
       <div style="margin:-24px -24px 24px;padding:28px 24px 24px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:12px 12px 0 0;display:flex;align-items:center;gap:16px;">
-        <div id="profileModalAvatar" style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.2);color:#fff;font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid rgba(255,255,255,0.35);">?</div>
+        <!-- Avatar clicável com upload de foto -->
+        <div style="position:relative;flex-shrink:0;cursor:pointer;" id="avatarClickArea" title="Alterar foto de perfil">
+          <div id="profileModalAvatar" style="width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,0.2);color:#fff;font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center;border:3px solid rgba(255,255,255,0.4);overflow:hidden;transition:filter 0.2s;">?</div>
+          <div style="position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s;pointer-events:none;" id="avatarOverlay">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+          <input type="file" id="avatarFileInput" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none;" />
+        </div>
         <div>
           <div id="profileModalName" style="font-size:18px;font-weight:700;color:#fff;margin-bottom:3px;">Carregando...</div>
-          <div id="profileModalEmail" style="font-size:13px;color:rgba(255,255,255,0.7);"></div>
+          <div id="profileModalEmail" style="font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:6px;"></div>
+          <div style="font-size:11px;color:rgba(255,255,255,0.5);">Clique na foto para alterar</div>
         </div>
       </div>
       <div style="margin-bottom:20px;">
@@ -572,6 +580,106 @@
         clearInterval(_avatarInit);
       }
     }, 300);
+
+    // ── Hover no avatar ──
+    const avatarClickArea = document.getElementById('avatarClickArea');
+    const avatarOverlay   = document.getElementById('avatarOverlay');
+    const avatarFileInput = document.getElementById('avatarFileInput');
+
+    if (avatarClickArea) {
+      avatarClickArea.addEventListener('mouseenter', () => avatarOverlay.style.opacity = '1');
+      avatarClickArea.addEventListener('mouseleave', () => avatarOverlay.style.opacity = '0');
+      avatarClickArea.addEventListener('click', () => avatarFileInput.click());
+    }
+
+    // ── Função para aplicar foto em todos os avatares da UI ──
+    function applyAvatarPhoto(base64) {
+      // Modal
+      const modalAv = document.getElementById('profileModalAvatar');
+      if (modalAv) {
+        modalAv.textContent = '';
+        modalAv.style.background = 'transparent';
+        modalAv.style.backgroundImage = `url(${base64})`;
+        modalAv.style.backgroundSize = 'cover';
+        modalAv.style.backgroundPosition = 'center';
+      }
+      // Header (pequeno)
+      const headerAv = document.getElementById('profileAvatar');
+      if (headerAv) {
+        headerAv.textContent = '';
+        headerAv.style.background = 'transparent';
+        headerAv.style.backgroundImage = `url(${base64})`;
+        headerAv.style.backgroundSize = 'cover';
+        headerAv.style.backgroundPosition = 'center';
+      }
+      // Sidebar mobile
+      const sidebarAv = document.getElementById('sidebarProfileAvatar');
+      if (sidebarAv) {
+        sidebarAv.textContent = '';
+        sidebarAv.style.background = 'transparent';
+        sidebarAv.style.backgroundImage = `url(${base64})`;
+        sidebarAv.style.backgroundSize = 'cover';
+        sidebarAv.style.backgroundPosition = 'center';
+      }
+    }
+
+    // ── Carrega foto salva ao abrir o modal ──
+    const _origOpenProfileModal = openProfileModal;
+    openProfileModal = function() {
+      _origOpenProfileModal();
+      const auth = window.authManager;
+      if (!auth || !auth.currentUser) return;
+      const savedPhoto = localStorage.getItem('sp_avatar_' + auth.currentUser.id);
+      if (savedPhoto) applyAvatarPhoto(savedPhoto);
+    };
+
+    // ── Carrega foto no header ao iniciar ──
+    const _photoInit = setInterval(() => {
+      const auth = window.authManager;
+      if (auth && auth.currentUser) {
+        const savedPhoto = localStorage.getItem('sp_avatar_' + auth.currentUser.id);
+        if (savedPhoto) applyAvatarPhoto(savedPhoto);
+        clearInterval(_photoInit);
+      }
+    }, 400);
+
+    // ── Upload e processamento da foto ──
+    avatarFileInput && avatarFileInput.addEventListener('change', function() {
+      const file = this.files[0];
+      if (!file) return;
+      if (file.size > 3 * 1024 * 1024) {
+        showMsg('usernameMsg', '❌ Imagem muito grande. Máximo 3MB.', false);
+        document.getElementById('usernameMsg').style.display = 'block';
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        // Redimensiona para 256x256 antes de salvar
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement('canvas');
+          canvas.width = canvas.height = 256;
+          const ctx = canvas.getContext('2d');
+          // Crop quadrado centralizado
+          const size = Math.min(img.width, img.height);
+          const sx = (img.width - size) / 2;
+          const sy = (img.height - size) / 2;
+          ctx.drawImage(img, sx, sy, size, size, 0, 0, 256, 256);
+          const base64 = canvas.toDataURL('image/jpeg', 0.85);
+          // Salva no localStorage por user id
+          const auth = window.authManager;
+          if (auth && auth.currentUser) {
+            localStorage.setItem('sp_avatar_' + auth.currentUser.id, base64);
+          }
+          applyAvatarPhoto(base64);
+          showMsg('usernameMsg', '✅ Foto de perfil atualizada!', true);
+          document.getElementById('usernameMsg').style.display = 'block';
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+      this.value = ''; // reset input para permitir re-upload do mesmo arquivo
+    });
 
     // Esc fecha modais
     document.addEventListener('keydown', e => {
