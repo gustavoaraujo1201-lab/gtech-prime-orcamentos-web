@@ -567,32 +567,101 @@
     }
 
 
+    // ── Carrega html2canvas e jsPDF sob demanda ──────────────────────────────
+    function loadShareLibs() {
+      return new Promise((resolve, reject) => {
+        if (window._shareLibsReady) { resolve(); return; }
+        const loadScript = (src) => new Promise((res, rej) => {
+          if (document.querySelector('script[src="'+src+'"]')) { res(); return; }
+          const s = document.createElement('script');
+          s.src = src; s.onload = res; s.onerror = rej;
+          document.head.appendChild(s);
+        });
+        Promise.all([
+          loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'),
+          loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js')
+        ]).then(() => { window._shareLibsReady = true; resolve(); }).catch(reject);
+      });
+    }
+
+    // ── Gera PDF como Blob usando html2canvas + jsPDF ────────────────────────
+    async function generatePdfBlob(quoteId) {
+      const q = store.quotes.find(x => x.id === quoteId);
+      if (!q) throw new Error('Orçamento não encontrado');
+      const issuer = (store.issuers||[]).find(i => i.id === q.issuerId) || {};
+      const client = (store.clients||[]).find(c => c.id === q.clientId) || {};
+
+      // Usa a mesma função de build do app.js (clássico por padrão)
+      const htmlDoc = buildPdfClassico(q, issuer, client);
+
+      // Renderiza num iframe oculto
+      const iframe = document.createElement('iframe');
+      iframe.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:794px;height:1123px;border:none;visibility:hidden;';
+      document.body.appendChild(iframe);
+
+      await new Promise(res => {
+        iframe.onload = res;
+        const iDoc = iframe.contentWindow.document;
+        iDoc.open(); iDoc.write(htmlDoc); iDoc.close();
+      });
+
+      // Aguarda imagens carregarem
+      const imgs = Array.from(iframe.contentWindow.document.images).filter(i => !i.complete);
+      if (imgs.length) {
+        await new Promise(res => {
+          let done = 0;
+          imgs.forEach(img => {
+            img.addEventListener('load',  () => { done++; if (done === imgs.length) res(); });
+            img.addEventListener('error', () => { done++; if (done === imgs.length) res(); });
+          });
+          setTimeout(res, 3000); // fallback timeout
+        });
+      }
+      await new Promise(res => setTimeout(res, 300));
+
+      // Captura via html2canvas
+      const canvas = await html2canvas(iframe.contentWindow.document.body, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        width: 794,
+        windowWidth: 794
+      });
+
+      document.body.removeChild(iframe);
+
+      // Gera PDF A4
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
+      const imgH = (canvas.height * pageW) / canvas.width;
+
+      // Se maior que uma página, divide
+      if (imgH <= pageH) {
+        pdf.addImage(imgData, 'JPEG', 0, 0, pageW, imgH);
+      } else {
+        let yOffset = 0;
+        while (yOffset < imgH) {
+          if (yOffset > 0) pdf.addPage();
+          pdf.addImage(imgData, 'JPEG', 0, -yOffset, pageW, imgH);
+          yOffset += pageH;
+        }
+      }
+
+      return pdf.output('blob');
+    }
+
+    // ── Modal de compartilhamento com PDF real ───────────────────────────────
     function openShareModal(id) {
       const q = store.quotes.find(x => x.id === id);
       const iss = (store.issuers||[]).find(i => i.id === q?.issuerId) || {};
       const cli = (store.clients||[]).find(c => c.id === q?.clientId) || {};
       const totalFmt = 'R$ ' + Number(q?.total||0).toLocaleString('pt-BR', {minimumFractionDigits:2});
-      const dateStr = q?.createdAt ? new Date(q.createdAt).toLocaleDateString('pt-BR') : '';
       const num = q?.numero || id;
-
-      const msgWpp = encodeURIComponent(
-        'Olá! Segue o orçamento *' + num + '*.' + '\n\n' +
-        '📋 *De:* ' + (iss.name||'—') + '\n' +
-        '👤 *Para:* ' + (cli.name||'—') + '\n' +
-        '💰 *Valor:* ' + totalFmt + '\n' +
-        '📅 *Data:* ' + dateStr + '\n\n' +
-        'Para visualizar o orçamento completo em PDF, solicite o arquivo ao emissor.'
-      );
-      const assunto = encodeURIComponent('Orçamento ' + num + ' - ' + (iss.name||''));
-      const corpoEmail = encodeURIComponent(
-        'Olá,' + '\n\n' +
-        'Segue o orçamento ' + num + '.' + '\n\n' +
-        'De: ' + (iss.name||'—') + '\n' +
-        'Para: ' + (cli.name||'—') + '\n' +
-        'Valor: ' + totalFmt + '\n' +
-        'Data: ' + dateStr + '\n\n' +
-        'Para visualizar o PDF completo, solicite o arquivo ao emissor.'
-      );
+      const fileName = 'orcamento_' + num.replace(/[^a-zA-Z0-9_-]/g, '_') + '.pdf';
 
       // Remove modal anterior se existir
       const prev = document.getElementById('sp-share-modal');
@@ -605,17 +674,17 @@
         <div style="background:#fff;border-radius:14px;padding:28px 24px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
           <h3 style="margin:0 0 6px;font-size:17px;color:#1a1a1a;">📤 Compartilhar Orçamento</h3>
           <p style="margin:0 0 20px;font-size:13px;color:#6b7280;">Orçamento <strong>${num}</strong> · ${totalFmt}</p>
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <a href="https://wa.me/?text=${msgWpp}" target="_blank" rel="noopener"
-               style="display:flex;align-items:center;gap:10px;padding:13px 16px;background:#25d366;color:#fff;border-radius:9px;text-decoration:none;font-weight:600;font-size:14px;">
+          <div id="sp-share-btns" style="display:flex;flex-direction:column;gap:10px;">
+            <button id="sp-share-wpp"
+               style="display:flex;align-items:center;gap:10px;padding:13px 16px;background:#25d366;color:#fff;border-radius:9px;border:none;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;width:100%;">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
               Compartilhar no WhatsApp
-            </a>
-            <a href="mailto:?subject=${assunto}&body=${corpoEmail}" 
-               style="display:flex;align-items:center;gap:10px;padding:13px 16px;background:#0d7de0;color:#fff;border-radius:9px;text-decoration:none;font-weight:600;font-size:14px;">
+            </button>
+            <button id="sp-share-email"
+               style="display:flex;align-items:center;gap:10px;padding:13px 16px;background:#0d7de0;color:#fff;border-radius:9px;border:none;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;width:100%;">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
               Enviar por Email
-            </a>
+            </button>
             <button onclick="document.getElementById('sp-share-modal').remove()"
                style="padding:11px 16px;background:#f3f4f6;color:#374151;border:none;border-radius:9px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;">
               Cancelar
@@ -623,9 +692,73 @@
           </div>
         </div>`;
 
-      // Fecha ao clicar fora
       modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
       document.body.appendChild(modal);
+
+      // ── Função auxiliar: gera PDF e executa callback com blob e url ─────────
+      async function withPdf(btnEl, label, action) {
+        btnEl.disabled = true;
+        btnEl.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:sp-spin 0.7s linear infinite;"></span> Gerando PDF...';
+        if (!document.getElementById('sp-spin-css')) {
+          const s = document.createElement('style'); s.id='sp-spin-css';
+          s.textContent='@keyframes sp-spin{to{transform:rotate(360deg)}}';
+          document.head.appendChild(s);
+        }
+        try {
+          await loadShareLibs();
+          const blob = await generatePdfBlob(id);
+          const url = URL.createObjectURL(blob);
+          await action(blob, url, fileName);
+          setTimeout(() => URL.revokeObjectURL(url), 60000);
+        } catch(err) {
+          console.error('[SHARE PDF ERROR]', err);
+          showNotification('Erro ao gerar PDF para compartilhamento', 'error');
+        } finally {
+          btnEl.disabled = false;
+        }
+        document.getElementById('sp-share-modal')?.remove();
+      }
+
+      // ── Botão WhatsApp ───────────────────────────────────────────────────────
+      document.getElementById('sp-share-wpp').addEventListener('click', async function() {
+        await withPdf(this, 'WhatsApp', async (blob, url, fname) => {
+          const pdfFile = new File([blob], fname, { type: 'application/pdf' });
+          const msgText = 'Olá! Segue o orçamento *' + num + '*.\n\n📋 *De:* ' + (iss.name||'—') + '\n👤 *Para:* ' + (cli.name||'—') + '\n💰 *Valor:* ' + totalFmt + '\n\nOrçamento gerado pelo SoftPrime.';
+
+          // Celular: Web Share API com arquivo PDF
+          if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+            await navigator.share({ files: [pdfFile], title: 'Orçamento ' + num, text: msgText });
+          } else {
+            // Desktop: baixa o PDF + abre WhatsApp Web com mensagem
+            const a = document.createElement('a');
+            a.href = url; a.download = fname; a.click();
+            setTimeout(() => {
+              window.open('https://wa.me/?text=' + encodeURIComponent(msgText + '\n\n(PDF baixado automaticamente — anexe o arquivo na conversa)'), '_blank');
+            }, 800);
+          }
+        });
+      });
+
+      // ── Botão Email ──────────────────────────────────────────────────────────
+      document.getElementById('sp-share-email').addEventListener('click', async function() {
+        await withPdf(this, 'Email', async (blob, url, fname) => {
+          const pdfFile = new File([blob], fname, { type: 'application/pdf' });
+          const subject = 'Orçamento ' + num + ' - ' + (iss.name||'');
+          const body = 'Olá,\n\nSegue em anexo o orçamento ' + num + '.\n\nDe: ' + (iss.name||'—') + '\nPara: ' + (cli.name||'—') + '\nValor: ' + totalFmt + '\n\nAtenciosamente,\n' + (iss.name||'');
+
+          // Celular: Web Share API com arquivo PDF
+          if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+            await navigator.share({ files: [pdfFile], title: subject, text: body });
+          } else {
+            // Desktop: baixa o PDF + abre cliente de email
+            const a = document.createElement('a');
+            a.href = url; a.download = fname; a.click();
+            setTimeout(() => {
+              window.location.href = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body + '\n\n(PDF baixado automaticamente — anexe o arquivo ao email)');
+            }, 800);
+          }
+        });
+      });
     }
 
         // Busca
