@@ -337,8 +337,8 @@
   <header>
     <div class="logo-mark">⚡ SoftPrime</div>
     <nav class="header-nav">
-      <a href="login.html" class="btn-back">← Voltar</a>
-      <a href="login.html" class="btn-login">Entrar</a>
+      <a href="/login" class="btn-back">← Voltar</a>
+      <a href="/login" class="btn-login">Entrar</a>
     </nav>
   </header>
 
@@ -446,7 +446,7 @@
   </section>
 
   <footer>
-    <p>© 2026 SoftPrime — <a href="login.html">Entrar no sistema</a> · Dúvidas? <a href="https://wa.me/5518981607700" target="_blank">Falar no WhatsApp</a></p>
+    <p>© 2026 SoftPrime — <a href="/login">Entrar no sistema</a> · Dúvidas? <a href="https://wa.me/5518981607700" target="_blank">Falar no WhatsApp</a></p>
   </footer>
 
 </div><!-- .page -->
@@ -555,7 +555,7 @@ function startCheckout() {
     const btnLogin = document.querySelector('.btn-login');
 
     if (isLoggedIn) {
-      if (btnBack)  { btnBack.href = 'index.html'; btnBack.textContent = '← Voltar ao app'; }
+      if (btnBack)  { btnBack.href = '/index'; btnBack.textContent = '← Voltar ao app'; }
       if (btnLogin) { btnLogin.style.display = 'none'; }
     }
 
@@ -579,7 +579,7 @@ function startCheckout() {
             <style>@keyframes loadBar{from{width:0}to{width:100%}}</style>
           </div>
         </div>`;
-      setTimeout(() => { window.location.href = 'index.html'; }, 2800);
+      setTimeout(() => { window.location.href = '/index'; }, 2800);
     }
   });
 })();

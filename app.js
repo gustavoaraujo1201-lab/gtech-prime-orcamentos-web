@@ -1688,7 +1688,7 @@ async function initApp() {
   // Botão de contato WhatsApp — aparece em todas as páginas do app
   renderDevContactButton();
   console.log('✅ SoftPrime iniciado! Usuário:', getUserId());
-  if (window.location.pathname.endsWith('orcamentos_salvos.html')) {
+  if (window.location.pathname.endsWith('orcamentos_salvos.html') || window.location.pathname === '/orcamentos_salvos' || window.location.pathname === '/orcamentos_salvos/') {
     if (typeof renderPanel === 'function') renderPanel();
   }
 }

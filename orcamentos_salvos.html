@@ -266,15 +266,15 @@
       <div class="sidebar-nav">
         <div class="sidebar-section-label">Menu</div>
         
-        <a href="index.html" class="sidebar-btn" id="navHome">
+        <a href="/index" class="sidebar-btn" id="navHome">
           <span class="nav-icon">🏠</span>
           <span>Início</span>
         </a>
-        <a href="cadastro.html" class="sidebar-btn" id="navCadastro">
+        <a href="/cadastro" class="sidebar-btn" id="navCadastro">
           <span class="nav-icon">📋</span>
           <span>Cadastro</span>
         </a>
-        <a href="orcamentos_salvos.html" class="sidebar-btn active" id="navOrcamentos">
+        <a href="/orcamentos_salvos" class="sidebar-btn active" id="navOrcamentos">
           <span class="nav-icon">💼</span>
           <span>Orçamentos Salvos</span>
         </a>
@@ -326,7 +326,7 @@
             <div class="sp-empty">
               <div class="sp-empty-icon">📭</div>
               <h4>Nenhum orçamento ainda</h4>
-              <p>Crie seu primeiro orçamento na tela <a href="index.html" style="color:#0d7de0;">Início</a></p>
+              <p>Crie seu primeiro orçamento na tela <a href="/index" style="color:#0d7de0;">Início</a></p>
             </div>
           </div>
         </div>
@@ -525,7 +525,7 @@
       else spInfo.textContent='';
 
       if(!filtered.length){
-        spList.innerHTML=quotes.length?'<div class="sp-empty"><div class="sp-empty-icon">🔍</div><h4>Nenhum resultado</h4><p>Tente outros termos</p></div>':'<div class="sp-empty"><div class="sp-empty-icon">📭</div><h4>Nenhum orçamento ainda</h4><p>Crie seu primeiro orçamento na tela <a href=\"index.html\" style=\"color:#0d7de0;\">Início</a></p></div>';
+        spList.innerHTML=quotes.length?'<div class="sp-empty"><div class="sp-empty-icon">🔍</div><h4>Nenhum resultado</h4><p>Tente outros termos</p></div>':'<div class="sp-empty"><div class="sp-empty-icon">📭</div><h4>Nenhum orçamento ainda</h4><p>Crie seu primeiro orçamento na tela <a href=\"/index\" style=\"color:#0d7de0;\">Início</a></p></div>';
         return;
       }
 
@@ -563,7 +563,7 @@
     function startEditMode_redirect(id) {
       // Guarda o id na sessionStorage e redireciona para Início
       sessionStorage.setItem('editQuoteId', id);
-      window.location.href = 'index.html';
+      window.location.href = '/index';
     }
 
 
@@ -1217,7 +1217,7 @@
       </div>
 
       <p style="text-align:center;font-size:12px;color:rgba(160,200,255,0.3);margin:0;">
-        <a href="planos.html" target="_blank" style="color:#1a8fff;text-decoration:none;">Ver comparativo completo →</a>
+        <a href="/planos" target="_blank" style="color:#1a8fff;text-decoration:none;">Ver comparativo completo →</a>
         &nbsp;·&nbsp; Cancele quando quiser
       </p>
     </div>

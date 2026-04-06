@@ -1,0 +1,14 @@
+Options -MultiViews
+RewriteEngine On
+
+# Se o arquivo ou diretório existe, serve direto
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Remove .html da URL — redireciona /pagina.html → /pagina (301)
+RewriteCond %{REQUEST_URI} ^(.+)\.html$
+RewriteRule ^(.+)\.html$ /$1 [R=301,L]
+
+# Acessa /pagina → serve pagina.html internamente (sem redirecionar)
+RewriteCond %{REQUEST_FILENAME}\.html -f
+RewriteRule ^([^\.]+)$ $1.html [NC,L]

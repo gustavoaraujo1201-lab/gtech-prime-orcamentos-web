@@ -57,7 +57,7 @@ class AuthManager {
         if (isLoginPage) {
           // Estava no login com sessão → vai para o app
           this._redirecting = true;
-          window.location.replace('/index.html');
+          window.location.replace('/index');
           return;
         }
 
@@ -72,7 +72,7 @@ class AuthManager {
         if (isAppPage) {
           // No app sem sessão → vai para login
           this._redirecting = true;
-          window.location.replace('/login.html');
+          window.location.replace('/login');
           return;
         }
 
@@ -98,7 +98,7 @@ class AuthManager {
           this.currentUser = session.user;
           if (this._isLoginPage()) {
             this._redirecting = true;
-            window.location.replace('/index.html');
+            window.location.replace('/index');
           }
         }
 
@@ -106,7 +106,7 @@ class AuthManager {
           this.currentUser = null;
           if (!this._redirecting) {
             this._redirecting = true;
-            window.location.replace('/login.html');
+            window.location.replace('/login');
           }
         }
 
@@ -130,7 +130,7 @@ class AuthManager {
 
   _isPlanosPage() {
     const p = window.location.pathname;
-    return p.endsWith('planos.html');
+    return p.endsWith('planos.html') || p === '/planos' || p === '/planos/';
   }
 
   _isAppPage() {
@@ -139,7 +139,9 @@ class AuthManager {
     return p.endsWith('index.html')
         || p.endsWith('cadastro.html')
         || p.endsWith('orcamentos_salvos.html')
-        || p === '/' || p === '' || p === '/index' || p === '/index/';
+        || p === '/' || p === '' || p === '/index' || p === '/index/'
+        || p === '/cadastro' || p === '/cadastro/'
+        || p === '/orcamentos_salvos' || p === '/orcamentos_salvos/';
   }
 
   // Retorna o plano atual do usuário (lido do localStorage)
@@ -206,7 +208,7 @@ class AuthManager {
   showAuth() {
     if (!this._redirecting && !this._isLoginPage()) {
       this._redirecting = true;
-      window.location.replace('/login.html');
+      window.location.replace('/login');
     }
   }
 
@@ -255,7 +257,7 @@ class AuthManager {
         }
 
         this._redirecting = true;
-        window.location.replace('/index.html');
+        window.location.replace('/index');
         return { success: true, autoLogin: true, message: '✅ Conta criada e login realizado!' };
       }
 
@@ -305,7 +307,7 @@ class AuthManager {
       this.currentUser = data.user;
 
       this._redirecting = true;
-      window.location.replace('/index.html');
+      window.location.replace('/index');
       return { success: true, message: '✅ Login realizado com sucesso!' };
 
     } catch (err) {
@@ -339,7 +341,7 @@ class AuthManager {
   async resetPassword(email) {
     try {
       const { error } = await this.supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/login.html`
+        redirectTo: `${window.location.origin}/login`
       });
       if (error) throw error;
       return { success: true, message: '✅ Email de recuperação enviado!' };
@@ -365,7 +367,7 @@ class AuthManager {
 
     // Monta o HTML do badge
     const badgeHtml = cfg
-      ? `<a href="planos.html" class="sidebar-plan-badge" title="Meu plano: ${cfg.label}" style="
+      ? `<a href="/planos" class="sidebar-plan-badge" title="Meu plano: ${cfg.label}" style="
             display:flex;align-items:center;gap:11px;
             width:100%;padding:10px 12px;margin:0 0 2px;
             border-radius:8px;border:1px solid transparent;
@@ -381,7 +383,7 @@ class AuthManager {
           </div>
           <span style="font-size:10px;color:rgba(255,255,255,0.3);flex-shrink:0;">›</span>
         </a>`
-      : `<a href="planos.html" class="sidebar-plan-badge" title="Escolha um plano" style="
+      : `<a href="/planos" class="sidebar-plan-badge" title="Escolha um plano" style="
             display:flex;align-items:center;gap:11px;
             width:100%;padding:10px 12px;margin:0 0 2px;
             border-radius:8px;border:1px solid transparent;
