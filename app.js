@@ -1688,8 +1688,21 @@ async function initApp() {
   // Botão de contato WhatsApp — aparece em todas as páginas do app
   renderDevContactButton();
   console.log('✅ SoftPrime iniciado! Usuário:', getUserId());
-  if (window.location.pathname.endsWith('orcamentos_salvos.html') || window.location.pathname === '/orcamentos_salvos' || window.location.pathname === '/orcamentos_salvos/') {
+
+  const p = window.location.pathname;
+  if (p.endsWith('orcamentos_salvos.html') || p === '/orcamentos_salvos' || p === '/orcamentos_salvos/') {
     if (typeof renderPanel === 'function') renderPanel();
+  }
+
+  // ── Retomar edição vinda da página Orçamentos Salvos ─────────────────────
+  const pendingEditId = sessionStorage.getItem('editQuoteId');
+  if (pendingEditId) {
+    sessionStorage.removeItem('editQuoteId');
+    setTimeout(() => {
+      if (typeof startEditMode === 'function') {
+        startEditMode(pendingEditId);
+      }
+    }, 300);
   }
 }
 

@@ -560,8 +560,26 @@
       });
     }
 
+    // ── Aguarda o app.js terminar de carregar antes de executar ações ─────────
+    function waitForApp(timeout = 8000) {
+      return new Promise((resolve, reject) => {
+        if (window._appInitialized && typeof store !== 'undefined' && Array.isArray(store.quotes)) {
+          resolve(); return;
+        }
+        const start = Date.now();
+        const check = setInterval(() => {
+          if (window._appInitialized && typeof store !== 'undefined' && Array.isArray(store.quotes)) {
+            clearInterval(check);
+            resolve();
+          } else if (Date.now() - start > timeout) {
+            clearInterval(check);
+            reject(new Error('App não inicializou a tempo'));
+          }
+        }, 100);
+      });
+    }
+
     function startEditMode_redirect(id) {
-      // Guarda o id na sessionStorage e redireciona para Início
       sessionStorage.setItem('editQuoteId', id);
       window.location.href = '/index';
     }
@@ -569,16 +587,29 @@
     async function deleteQuote(id) {
       if (!confirm('Tem certeza que deseja excluir este orçamento? Esta ação não pode ser desfeita.')) return;
       try {
-        await dbDeleteQuote(id);
-        // Remove do store local
+        // Aguarda o app estar 100% pronto antes de executar
+        await waitForApp();
+        // Remove do store local imediatamente (feedback visual instantâneo)
         if (typeof store !== 'undefined' && Array.isArray(store.quotes)) {
           store.quotes = store.quotes.filter(q => q.id !== id);
         }
-        showNotification('Orçamento excluído com sucesso.', 'success');
         renderPanel();
+        // Exclui do banco em segundo plano
+        if (typeof dbDeleteQuote === 'function') {
+          await dbDeleteQuote(id);
+        } else {
+          const sb = typeof getSupabase === 'function' ? getSupabase() : null;
+          if (sb) await sb.from('quotes').delete().eq('id', id);
+        }
+        showNotification('Orçamento excluído com sucesso! ✅', 'success');
       } catch(err) {
         console.error('[deleteQuote]', err);
-        showNotification('Erro ao excluir orçamento. Tente novamente.', 'error');
+        // Se falhou, recarrega os dados reais do banco
+        if (typeof loadAllData === 'function') {
+          await loadAllData();
+          renderPanel();
+        }
+        showNotification('Erro ao excluir. Tente novamente.', 'error');
       }
     }
 
