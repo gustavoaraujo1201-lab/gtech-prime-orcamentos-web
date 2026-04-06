@@ -662,8 +662,19 @@
       const xVUnit = xQtd   + colQtd;
       const xTot   = xVUnit + colVUnit;
 
+      // helper: desenha linhas verticais divisórias entre colunas
+      const drawColDividers = (rowY, rowHgt, divColor) => {
+        setStroke(divColor);
+        pdf.line(xQtd,   rowY, xQtd,   rowY + rowHgt);
+        pdf.line(xVUnit, rowY, xVUnit, rowY + rowHgt);
+        pdf.line(xTot,   rowY, xTot,   rowY + rowHgt);
+      };
+
+      // Cabeçalho
       setFill('#0d7de0'); setStroke('#0a5fb8');
-      pdf.rect(mL, y, cW, rowH, 'F');
+      pdf.rect(mL, y, cW, rowH, 'FD');
+      // divisórias do cabeçalho em azul escuro
+      drawColDividers(y, rowH, '#0a5fb8');
       pdf.setFont('helvetica','bold'); pdf.setFontSize(9); setTxt('#ffffff');
       pdf.text('Descricao',   xDesc  + 3,           y + 5.5);
       pdf.text('Qtd',         xQtd   + colQtd/2,    y + 5.5, {align:'center'});
@@ -686,16 +697,20 @@
           y = mT;
         }
 
+        // Fundo zebrado
         if (idx % 2 === 1) { setFill('#f8fafc'); pdf.rect(mL, y, cW, cellH, 'F'); }
+        // Borda externa da linha
         setStroke('#d1d5db');
         pdf.rect(mL, y, cW, cellH, 'S');
+        // Divisórias verticais internas
+        drawColDividers(y, cellH, '#d1d5db');
 
         pdf.setFont('helvetica','normal'); pdf.setFontSize(9); setTxt('#1a1a1a');
-        pdf.text(descLines,                                          xDesc  + 3,           y + 5);
-        pdf.text(String(it.quantidade||0),                           xQtd   + colQtd/2,    y + 5, {align:'center'});
-        pdf.text('R$ ' + mf(it.valorUnitario),                       xVUnit + colVUnit - 3, y + 5, {align:'right'});
+        pdf.text(descLines,                                            xDesc  + 3,           y + 5);
+        pdf.text(String(it.quantidade||0),                             xQtd   + colQtd/2,    y + 5, {align:'center'});
+        pdf.text('R$ ' + mf(it.valorUnitario),                         xVUnit + colVUnit - 3, y + 5, {align:'right'});
         pdf.setFont('helvetica','bold');
-        pdf.text('R$ ' + mf((it.quantidade||0)*(it.valorUnitario||0)), xTot + colTot - 3,  y + 5, {align:'right'});
+        pdf.text('R$ ' + mf((it.quantidade||0)*(it.valorUnitario||0)), xTot   + colTot  - 3, y + 5, {align:'right'});
         y += cellH;
       });
 
