@@ -413,23 +413,7 @@ class AuthManager {
       }
     }
 
-    // Atualiza também a área mobile (sidebarMobileProfile)
-    const mobileProfile = document.getElementById('sidebarMobileProfile');
-    if (mobileProfile) {
-      const oldMobile = mobileProfile.querySelector('.sidebar-plan-badge-mobile');
-      if (oldMobile) oldMobile.remove();
-
-      const mobileBadgeHtml = cfg
-        ? `<a href="planos.html" class="sidebar-plan-badge-mobile sidebar-btn" style="color:${cfg.color};border:1px solid ${cfg.border};background:${cfg.bg};">
-            <span>${cfg.icon}</span><span>Plano ${cfg.label}</span>
-           </a>`
-        : `<a href="planos.html" class="sidebar-plan-badge-mobile sidebar-btn" style="color:#fbbf24;border:1px solid rgba(251,191,36,0.3);background:rgba(251,191,36,0.08);">
-            <span>⚡</span><span>Ver planos</span>
-           </a>`;
-
-      const mobileLabel = mobileProfile.querySelector('.sidebar-section-label');
-      if (mobileLabel) mobileLabel.insertAdjacentHTML('afterend', mobileBadgeHtml);
-    }
+    // Nota: o badge de plano não é exibido no menu mobile (já aparece no topo do menu desktop)
   }
 
   // ── Getters ────────────────────────────────────────────────────

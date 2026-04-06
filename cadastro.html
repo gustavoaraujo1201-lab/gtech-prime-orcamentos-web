@@ -226,10 +226,11 @@
         </a>
         <div class="sidebar-mobile-profile" id="sidebarMobileProfile">
           <div class="sidebar-section-label" style="margin-top:24px;">Conta</div>
-          <div class="sidebar-profile-info" style="display:flex;align-items:center;gap:10px;padding:8px 12px;margin-bottom:4px;">
-            <div id="sidebarProfileAvatar" style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">?</div>
-            <div id="sidebarProfileName" style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.8);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Carregando...</div>
-          </div>
+          <button class="sidebar-btn" id="sidebarProfileBtn" style="width:100%;" onclick="if(typeof openProfileModal==='function') openProfileModal();">
+            <div id="sidebarProfileAvatar" style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;background-size:cover;background-position:center;">?</div>
+            <div id="sidebarProfileName" style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.8);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;text-align:left;">Carregando...</div>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.4;flex-shrink:0;"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
           <button class="sidebar-btn" onclick="if(window.authManager) window.authManager.signOut();">
             <span class="nav-icon">🚪</span><span>Sair da conta</span>
           </button>
