@@ -1,439 +1,332 @@
-// plan-guard.js — SoftPrime
-// Verifica plano do usuário no Supabase, controla trial de 7 dias
-// e bloqueia acesso/features conforme plano ativo.
-// Carregue APÓS config.js e auth.js
+// plan-guard.js — Controle de planos e trial de 7 dias (SoftPrime)
+// Fonte de verdade: tabela 'profiles' no Supabase (campo trial_start + plan)
+// O localStorage é apenas cache — nunca é a fonte definitiva
 
 (function () {
+  'use strict';
 
-  // ─── Configurações dos planos ────────────────────────────────────────────────
+  const TRIAL_DAYS     = 7;
+  const LS_PLAN_KEY    = 'softprime_plan';
+  const LS_TRIAL_KEY   = 'softprime_trial_start';
+  const LS_CHECKED_KEY = 'softprime_plan_checked_at';
+  const CHECK_TTL      = 5 * 60 * 1000; // revalida do Supabase a cada 5 min
 
-  const PLAN_LEVELS = { trial: 1, basic: 1, pro: 2, premium: 3, expired: 0 };
-
-  // Quais features cada nível desbloqueia
-  const FEATURE_MIN_LEVEL = {
-    export: 1,   // trial/basic ou acima → exportar CSV
-    pdf:    2,   // pro ou acima → PDF com logo
-    word:   3,   // premium → Word
-    excel:  3,   // premium → Excel
+  // Recursos liberados por plano
+  const PLAN_FEATURES = {
+    free:    [],
+    trial:   ['pdf', 'logo', 'word', 'excel', 'export'],
+    basic:   [],
+    pro:     ['pdf', 'logo'],
+    premium: ['pdf', 'logo', 'word', 'excel', 'export'],
   };
 
-  const PLAN_LABELS = {
-    trial:   'Trial (7 dias)',
-    basic:   'Básico',
-    pro:     'Intermediário',
-    premium: 'Premium',
-    expired: 'Expirado',
+  // Mensagens do paywall
+  const PAYWALL_MSGS = {
+    pdf:    { icon: '📄', title: 'PDF com Logo Personalizada',  subtitle: 'Disponível a partir do plano Intermediário.' },
+    word:   { icon: '📝', title: 'Exportação Word (.docx)',      subtitle: 'Exclusivo do plano Premium.' },
+    excel:  { icon: '📊', title: 'Exportação Excel (.xlsx)',     subtitle: 'Exclusivo do plano Premium.' },
+    export: { icon: '📤', title: 'Exportação Avançada',          subtitle: 'Disponível no plano Premium.' },
+    logo:   { icon: '🎨', title: 'Logo Personalizada',           subtitle: 'Disponível a partir do Intermediário.' },
   };
 
-  const FEATURE_LABELS = {
-    export: 'Exportação CSV',
-    pdf:    'PDF com logo personalizada',
-    word:   'Exportação Word (.docx)',
-    excel:  'Exportação Excel (.xlsx)',
+  // Links do Mercado Pago
+  const MP_LINKS = {
+    basic:   'https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=27ebb103fe7f4b79896c1bab3fbba34e',
+    pro:     'https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=d2e9a9c34db74ea9a5ab9cadcf811171',
+    premium: 'https://www.mercadopago.com.br/subscriptions/checkout?preapproval_plan_id=47df5b41e79a4ce8aef081c3babd9d3f',
   };
 
-  const REQUIRED_PLAN_LABEL = {
-    export: 'Básico',
-    pdf:    'Intermediário',
-    word:   'Premium',
-    excel:  'Premium',
-  };
+  // ─────────────────────────────────────────────────────────────────────────
+  // Helpers
+  // ─────────────────────────────────────────────────────────────────────────
 
-  // ─── Estado local ─────────────────────────────────────────────────────────────
-
-  let _planData = null; // dados brutos do Supabase
-  let _loaded   = false;
-
-  // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-  function _getSupabase() {
-    return window.authManager ? window.authManager.getSupabase() : null;
-  }
-  function _getUserId() {
-    return window.authManager ? window.authManager.getUserId() : null;
+  function getSupabaseClient() {
+    if (typeof getSupabase === 'function') return getSupabase();
+    if (window.authManager?.supabase) return window.authManager.supabase;
+    return null;
   }
 
-  // Persiste plano simplificado no localStorage (para PaywallModal legado)
-  function _syncLocalStorage(plan) {
-    const legacyMap = { trial: 'basic', basic: 'basic', pro: 'pro', premium: 'premium', expired: null };
-    const lsPlan = legacyMap[plan] || null;
-    if (lsPlan) {
-      localStorage.setItem('softprime_plan', lsPlan);
-    } else {
-      localStorage.removeItem('softprime_plan');
-    }
+  function getUserId() {
+    if (window.authManager?.currentUser?.id) return window.authManager.currentUser.id;
+    return null;
   }
 
-  // ─── Carregar plano do Supabase ───────────────────────────────────────────────
-
-  async function loadPlan() {
-    const sb  = _getSupabase();
-    const uid = _getUserId();
-    if (!sb || !uid) return null;
-
-    // 1. Busca registro existente
-    const { data, error } = await sb
-      .from('user_plans')
-      .select('*')
-      .eq('user_id', uid)
-      .maybeSingle();
-
-    if (error) {
-      console.error('[PlanGuard] Erro ao buscar plano:', error.message);
-      return null;
-    }
-
-    // 2. Se não existe, cria trial de 7 dias
-    if (!data) {
-      const now      = new Date();
-      const trialEnd = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-      const { data: created, error: createErr } = await sb
-        .from('user_plans')
-        .insert({
-          user_id:     uid,
-          plan:        'trial',
-          trial_start: now.toISOString(),
-          trial_end:   trialEnd.toISOString(),
-        })
-        .select()
-        .single();
-
-      if (createErr) {
-        console.error('[PlanGuard] Erro ao criar trial:', createErr.message);
-        return null;
-      }
-      _planData = created;
-      _loaded   = true;
-      _syncLocalStorage('trial');
-      console.log('[PlanGuard] Trial criado — expira em:', trialEnd.toLocaleDateString('pt-BR'));
-      return _planData;
-    }
-
-    _planData = data;
-    _loaded   = true;
-
-    // 3. Se o plano é 'trial', verifica se expirou
-    if (data.plan === 'trial') {
-      const now      = new Date();
-      const trialEnd = new Date(data.trial_end);
-      if (now > trialEnd) {
-        // Atualiza para 'expired' no banco
-        await sb.from('user_plans')
-          .update({ plan: 'expired', updated_at: new Date().toISOString() })
-          .eq('user_id', uid);
-        _planData.plan = 'expired';
-        _syncLocalStorage('expired');
-        console.warn('[PlanGuard] Trial expirado em:', trialEnd.toLocaleDateString('pt-BR'));
-        return _planData;
-      }
-    }
-
-    _syncLocalStorage(data.plan);
-    console.log('[PlanGuard] Plano carregado:', data.plan);
-    return _planData;
+  // Calcula dias restantes de trial a partir de uma data ISO
+  function trialDaysLeft(trialStartISO) {
+    if (!trialStartISO) return 0;
+    const start   = new Date(trialStartISO).getTime();
+    const now     = Date.now();
+    const elapsed = (now - start) / (1000 * 60 * 60 * 24); // dias
+    return Math.max(0, Math.ceil(TRIAL_DAYS - elapsed));
   }
 
-  // ─── Verificação de acesso ────────────────────────────────────────────────────
-
-  function getActivePlan() {
-    return _planData ? _planData.plan : null;
+  function trialExpired(trialStartISO) {
+    return trialDaysLeft(trialStartISO) <= 0;
   }
 
-  function getPlanLevel() {
-    const plan = getActivePlan();
-    return PLAN_LEVELS[plan] || 0;
-  }
-
-  function isExpired() {
-    return getActivePlan() === 'expired';
-  }
-
-  function hasAccess(feature) {
-    if (isExpired()) return false;
-    const userLevel = getPlanLevel();
-    const required  = FEATURE_MIN_LEVEL[feature] || 99;
-    return userLevel >= required;
-  }
-
-  function getTrialDaysLeft() {
-    if (!_planData || _planData.plan !== 'trial') return null;
-    const now      = new Date();
-    const trialEnd = new Date(_planData.trial_end);
-    const diff     = trialEnd - now;
-    if (diff <= 0) return 0;
-    return Math.ceil(diff / (1000 * 60 * 60 * 24));
-  }
-
-  // ─── Guard de página: redireciona se expirado ─────────────────────────────────
-
-  function enforcePlanGuard() {
-    if (!_loaded) return;
-
-    const isPlanos  = window.location.pathname.endsWith('planos.html');
-    const isLogin   = window.location.pathname.endsWith('login.html');
-
-    // Não bloqueia na própria página de planos ou login
-    if (isPlanos || isLogin) return;
-
-    if (isExpired()) {
-      console.warn('[PlanGuard] Plano expirado → redirecionando para planos.html');
-      window.location.replace('/planos.html?expired=1');
-    }
-  }
-
-  // ─── Banner de trial ──────────────────────────────────────────────────────────
-
-  function renderTrialBanner() {
-    // Remove banner anterior
-    const old = document.getElementById('sp-trial-banner');
-    if (old) old.remove();
-
-    const plan     = getActivePlan();
-    const daysLeft = getTrialDaysLeft();
-
-    if (plan !== 'trial' || daysLeft === null) return;
-
-    const urgency  = daysLeft <= 2;
-    const color    = urgency ? '#ef4444' : '#f5c842';
-    const bgColor  = urgency ? 'rgba(239,68,68,0.12)' : 'rgba(245,200,66,0.10)';
-    const border   = urgency ? 'rgba(239,68,68,0.35)' : 'rgba(245,200,66,0.30)';
-    const icon     = urgency ? '⚠️' : '⏳';
-    const msg      = daysLeft === 0
-      ? 'Seu período de trial expirou hoje!'
-      : daysLeft === 1
-        ? 'Último dia de trial! Assine para continuar.'
-        : `${daysLeft} dias restantes no seu período de teste gratuito.`;
-
-    const banner = document.createElement('div');
-    banner.id = 'sp-trial-banner';
-    banner.style.cssText = [
-      'position:fixed', 'bottom:16px', 'left:50%', 'transform:translateX(-50%)',
-      'z-index:9990', 'display:flex', 'align-items:center', 'gap:12px',
-      `background:${bgColor}`, `border:1px solid ${border}`,
-      'border-radius:12px', 'padding:12px 20px',
-      'backdrop-filter:blur(12px)', 'box-shadow:0 8px 32px rgba(0,0,0,0.3)',
-      'max-width:480px', 'width:calc(100% - 32px)',
-      'font-family:"DM Sans",sans-serif',
-    ].join(';');
-
-    banner.innerHTML = `
-      <span style="font-size:20px;">${icon}</span>
-      <div style="flex:1;min-width:0;">
-        <div style="font-size:13px;font-weight:600;color:${color};line-height:1.3;">${msg}</div>
-        <div style="font-size:12px;color:rgba(255,255,255,0.45);margin-top:2px;">
-          Plano atual: <strong style="color:${color};">Trial — apenas recursos básicos</strong>
-        </div>
-      </div>
-      <a href="planos.html" style="
-        padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;
-        background:${urgency ? '#ef4444' : '#f5c842'};
-        color:${urgency ? '#fff' : '#1a1a1a'};
-        text-decoration:none;white-space:nowrap;flex-shrink:0;
-      ">Ver planos</a>
-      <button onclick="this.parentElement.remove()" style="
-        background:none;border:none;cursor:pointer;
-        color:rgba(255,255,255,0.3);font-size:18px;padding:0 0 0 4px;
-        line-height:1;flex-shrink:0;
-      ">×</button>
-    `;
-
-    document.body.appendChild(banner);
-  }
-
-  // ─── Paywall modal (feature bloqueada) ────────────────────────────────────────
-
-  function openPaywall(feature) {
-    const existing = document.getElementById('sp-paywall-modal');
-    if (existing) existing.remove();
-
-    const plan         = getActivePlan();
-    const planLabel    = PLAN_LABELS[plan] || 'Nenhum';
-    const featureLabel = FEATURE_LABELS[feature] || feature;
-    const requiredPlan = REQUIRED_PLAN_LABEL[feature] || 'Premium';
-
-    const modal = document.createElement('div');
-    modal.id = 'sp-paywall-modal';
-    modal.style.cssText = [
-      'position:fixed', 'inset:0', 'z-index:99999',
-      'display:flex', 'align-items:center', 'justify-content:center',
-      'background:rgba(0,0,0,0.70)', 'backdrop-filter:blur(6px)',
-      'padding:20px',
-    ].join(';');
-
-    modal.innerHTML = `
-      <div style="
-        background:#1f2937;border:1px solid rgba(99,102,241,0.3);
-        border-radius:16px;padding:36px 28px;max-width:420px;width:100%;
-        box-shadow:0 24px 60px rgba(0,0,0,0.5);text-align:center;
-        font-family:'DM Sans',sans-serif;color:#f0f6ff;
-      ">
-        <div style="font-size:44px;margin-bottom:14px;">🔒</div>
-        <h3 style="margin:0 0 10px;font-size:20px;font-weight:700;color:#fff;">
-          Recurso bloqueado
-        </h3>
-        <p style="margin:0 0 6px;font-size:14px;color:rgba(160,200,255,0.75);line-height:1.5;">
-          <strong style="color:#a5b4fc;">${featureLabel}</strong> requer o plano
-          <strong style="color:#fff;">${requiredPlan}</strong> ou superior.
-        </p>
-        <p style="margin:0 0 24px;font-size:13px;color:rgba(160,200,255,0.45);">
-          Seu plano atual: <strong style="color:#6ee7b7;">${planLabel}</strong>
-        </p>
-        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
-          <button onclick="document.getElementById('sp-paywall-modal').remove()" style="
-            padding:10px 22px;border-radius:8px;
-            border:1px solid rgba(255,255,255,0.15);
-            background:transparent;color:rgba(255,255,255,0.55);
-            font-size:14px;cursor:pointer;font-family:inherit;
-          ">Fechar</button>
-          <a href="planos.html" style="
-            padding:10px 24px;border-radius:8px;border:none;
-            background:linear-gradient(135deg,#6366f1,#8b5cf6);
-            color:#fff;font-size:14px;font-weight:600;
-            cursor:pointer;text-decoration:none;
-            display:inline-flex;align-items:center;gap:6px;
-          ">⚡ Ver planos</a>
-        </div>
-      </div>
-    `;
-
-    modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
-    document.body.appendChild(modal);
-  }
-
-  // ─── Banner de expiração (planos.html) ───────────────────────────────────────
-
-  function renderExpiredBanner() {
-    if (!window.location.search.includes('expired=1')) return;
-    const hero = document.querySelector('.hero');
-    if (!hero) return;
-
-    const banner = document.createElement('div');
-    banner.style.cssText = [
-      'display:flex', 'align-items:center', 'gap:14px',
-      'padding:18px 24px', 'margin:0 auto 32px',
-      'max-width:600px', 'border-radius:14px',
-      'background:rgba(239,68,68,0.12)',
-      'border:1px solid rgba(239,68,68,0.35)',
-      'font-family:"DM Sans",sans-serif', 'color:#fca5a5',
-    ].join(';');
-    banner.innerHTML = `
-      <span style="font-size:28px;">⚠️</span>
-      <div>
-        <div style="font-size:15px;font-weight:700;margin-bottom:4px;color:#f87171;">
-          Seu período de trial expirou!
-        </div>
-        <div style="font-size:13px;color:rgba(252,165,165,0.7);">
-          Escolha um plano abaixo para continuar usando o SoftPrime.
-        </div>
-      </div>
-    `;
-    hero.insertAdjacentElement('afterend', banner);
-  }
-
-  // ─── Init principal ───────────────────────────────────────────────────────────
-
-  async function init() {
-    // Aguarda authManager estar pronto
-    let attempts = 0;
-    while ((!window.authManager || !window.authManager._initialized) && attempts < 40) {
-      await new Promise(r => setTimeout(r, 150));
-      attempts++;
-    }
-
-    const userId = _getUserId();
-    if (!userId) {
-      console.log('[PlanGuard] Sem usuário logado — nada a fazer.');
-      return;
-    }
-
-    await loadPlan();
-    enforcePlanGuard();
-
-    // Mostra banner de trial nas páginas do app
-    const isApp = ['index.html', 'cadastro.html', 'orcamentos_salvos.html']
-      .some(p => window.location.pathname.endsWith(p));
-    if (isApp) renderTrialBanner();
-
-    // Mostra banner de expirado na página de planos
-    if (window.location.pathname.endsWith('planos.html')) renderExpiredBanner();
-
-    // Substitui PaywallModal do app.js para usar este módulo
-    window.PaywallModal = {
-      hasAccess: hasAccess,
-      open:      openPaywall,
-      getCurrentPlan: getActivePlan,
-    };
-
-    console.log('[PlanGuard] ✅ Inicializado. Plano:', getActivePlan(), '| Dias trial:', getTrialDaysLeft());
-  }
-
-  // ─── Ativar plano pago (chamar após confirmação de pagamento) ────────────────
-
-  async function activatePlan(plan) {
-    const validPlans = ['basic', 'pro', 'premium'];
-    if (!validPlans.includes(plan)) {
-      console.error('[PlanGuard] Plano inválido:', plan);
-      return false;
-    }
-
-    const sb  = _getSupabase();
-    const uid = _getUserId();
-    if (!sb || !uid) return false;
-
-    const now     = new Date();
-    const planEnd = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000); // 30 dias
-
-    const { error } = await sb.from('user_plans')
-      .update({
-        plan:       plan,
-        plan_start: now.toISOString(),
-        plan_end:   planEnd.toISOString(),
-        updated_at: now.toISOString(),
-      })
-      .eq('user_id', uid);
-
-    if (error) {
-      console.error('[PlanGuard] Erro ao ativar plano:', error.message);
-      return false;
-    }
-
-    if (_planData) _planData.plan = plan;
-    _syncLocalStorage(plan);
-
-    // Remove banner de trial
-    const banner = document.getElementById('sp-trial-banner');
-    if (banner) banner.remove();
-
-    // Atualiza badge na sidebar
-    if (window.authManager && typeof window.authManager._renderPlanBadge === 'function') {
-      window.authManager._renderPlanBadge();
-    }
-
-    console.log('[PlanGuard] ✅ Plano ativado:', plan);
-    return true;
-  }
-
-  // ─── API pública ──────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────────────────────────────────
+  // Núcleo do PlanGuard
+  // ─────────────────────────────────────────────────────────────────────────
 
   window.PlanGuard = {
-    init,
-    loadPlan,
-    activatePlan,
-    getActivePlan,
-    getPlanLevel,
-    isExpired,
-    hasAccess,
-    getTrialDaysLeft,
-    openPaywall,
-    renderTrialBanner,
-    PLAN_LABELS,
+
+    _plan: null,         // plano ativo resolvido: 'trial'|'basic'|'pro'|'premium'|'free'
+    _trialStart: null,   // data ISO de início do trial
+    _ready: false,       // true após primeiro sync com Supabase
+    _readyCallbacks: [],
+
+    // ── Inicializa — sincroniza com Supabase ──────────────────────────────
+    async init() {
+      await this._syncFromSupabase();
+      this._ready = true;
+      this._readyCallbacks.forEach(fn => fn());
+      this._readyCallbacks = [];
+      this._applyAccess();
+    },
+
+    // Executa callback quando o guard estiver pronto
+    onReady(fn) {
+      if (this._ready) fn();
+      else this._readyCallbacks.push(fn);
+    },
+
+    // ── Busca/cria dados de plano no Supabase ────────────────────────────
+    async _syncFromSupabase() {
+      const sb  = getSupabaseClient();
+      const uid = getUserId();
+
+      // Se não há cliente Supabase ou usuário, usa apenas cache local
+      if (!sb || !uid) {
+        this._loadFromCache();
+        return;
+      }
+
+      // Revalida do Supabase apenas se o cache local expirou
+      const lastCheck = parseInt(localStorage.getItem(LS_CHECKED_KEY) || '0');
+      if (Date.now() - lastCheck < CHECK_TTL && localStorage.getItem(LS_PLAN_KEY)) {
+        this._loadFromCache();
+        return;
+      }
+
+      try {
+        const { data: profile, error } = await sb
+          .from('profiles')
+          .select('plan, trial_start')
+          .eq('id', uid)
+          .single();
+
+        if (error) throw error;
+
+        let plan       = profile?.plan       || null;
+        let trialStart = profile?.trial_start || null;
+
+        // Primeira vez sem plano → inicia trial automaticamente
+        if (!plan && !trialStart) {
+          trialStart = new Date().toISOString();
+          plan       = 'trial';
+          await sb.from('profiles').update({
+            plan:        'trial',
+            trial_start: trialStart,
+            updated_at:  new Date().toISOString(),
+          }).eq('id', uid);
+        }
+
+        // Trial expirado e plano ainda é 'trial' → rebaixa para 'free'
+        if (plan === 'trial' && trialExpired(trialStart)) {
+          plan = 'free';
+          await sb.from('profiles').update({
+            plan:       'free',
+            updated_at: new Date().toISOString(),
+          }).eq('id', uid);
+        }
+
+        this._plan       = plan || 'free';
+        this._trialStart = trialStart;
+
+        // Salva cache local
+        localStorage.setItem(LS_PLAN_KEY,    this._plan);
+        localStorage.setItem(LS_TRIAL_KEY,   trialStart || '');
+        localStorage.setItem(LS_CHECKED_KEY, String(Date.now()));
+
+      } catch (err) {
+        console.warn('[PlanGuard] Erro ao sincronizar com Supabase:', err.message);
+        this._loadFromCache();
+      }
+    },
+
+    // Carrega do cache local (fallback offline)
+    _loadFromCache() {
+      this._plan       = localStorage.getItem(LS_PLAN_KEY)  || 'free';
+      this._trialStart = localStorage.getItem(LS_TRIAL_KEY) || null;
+
+      // Verifica trial expirado mesmo offline
+      if (this._plan === 'trial' && trialExpired(this._trialStart)) {
+        this._plan = 'free';
+      }
+    },
+
+    // ── API pública ───────────────────────────────────────────────────────
+
+    getActivePlan() {
+      return this._plan || 'free';
+    },
+
+    hasAccess(feature) {
+      const plan = this.getActivePlan();
+      return (PLAN_FEATURES[plan] || []).includes(feature);
+    },
+
+    getTrialDaysLeft() {
+      if (this._plan !== 'trial') return 0;
+      return trialDaysLeft(this._trialStart);
+    },
+
+    isTrialActive() {
+      return this._plan === 'trial';
+    },
+
+    isTrialExpired() {
+      return this._plan === 'free' && !!this._trialStart;
+    },
+
+    // ── Aplica restrições de acesso na UI ────────────────────────────────
+    _applyAccess() {
+      const plan = this.getActivePlan();
+
+      // Atualiza badge do plano na sidebar (reusa o do auth.js se existir)
+      if (window.authManager && typeof window.authManager._renderPlanBadge === 'function') {
+        window.authManager._renderPlanBadge();
+      }
+
+      // Exibe banner de trial ou trial expirado
+      this._renderTrialBanner(plan);
+    },
+
+    // Banner topo da tela: dias restantes de trial ou expirado
+    _renderTrialBanner(plan) {
+      const existing = document.getElementById('sp-trial-banner');
+      if (existing) existing.remove();
+
+      const mainContent = document.querySelector('.main-content');
+      if (!mainContent) return;
+
+      let html = '';
+
+      if (plan === 'trial') {
+        const days = this.getTrialDaysLeft();
+        html = `
+          <div id="sp-trial-banner" style="
+            background:linear-gradient(90deg,#0f5132,#166534);
+            color:#fff;padding:9px 20px;display:flex;align-items:center;
+            justify-content:space-between;gap:12px;font-size:13px;flex-wrap:wrap;
+            border-bottom:1px solid rgba(255,255,255,0.1);">
+            <span>🎁 <strong>Trial gratuito:</strong> ${days} dia${days !== 1 ? 's' : ''} restante${days !== 1 ? 's' : ''} — aproveite todos os recursos!</span>
+            <a href="/planos" style="background:#fff;color:#166534;padding:5px 14px;border-radius:6px;font-weight:700;font-size:12px;text-decoration:none;white-space:nowrap;">Ver planos →</a>
+          </div>`;
+      } else if (plan === 'free' && this._trialStart) {
+        // Trial expirado — aviso mais urgente
+        html = `
+          <div id="sp-trial-banner" style="
+            background:linear-gradient(90deg,#7f1d1d,#991b1b);
+            color:#fff;padding:10px 20px;display:flex;align-items:center;
+            justify-content:space-between;gap:12px;font-size:13px;flex-wrap:wrap;
+            border-bottom:1px solid rgba(255,255,255,0.15);">
+            <span>⚠️ <strong>Seu trial de 7 dias expirou.</strong> Assine um plano para continuar usando o sistema.</span>
+            <a href="/planos" style="background:#fbbf24;color:#1a1a1a;padding:6px 16px;border-radius:6px;font-weight:700;font-size:12px;text-decoration:none;white-space:nowrap;">Assinar agora →</a>
+          </div>`;
+      }
+
+      if (html) {
+        mainContent.insertAdjacentHTML('afterbegin', html);
+      }
+    },
+
+    // ── Paywall ───────────────────────────────────────────────────────────
+    openPaywall(feature) {
+      const msg = PAYWALL_MSGS[feature] || {
+        icon: '🔒', title: 'Recurso Premium',
+        subtitle: 'Este recurso requer um plano pago.'
+      };
+
+      // Tenta usar o modal existente na página
+      const iconEl    = document.getElementById('pw-icon');
+      const titleEl   = document.getElementById('pw-title');
+      const subEl     = document.getElementById('pw-subtitle');
+      const modalEl   = document.getElementById('paywall-modal');
+
+      if (iconEl && titleEl && subEl && modalEl) {
+        iconEl.textContent  = msg.icon;
+        titleEl.textContent = msg.title;
+        subEl.textContent   = msg.subtitle;
+        modalEl.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        return;
+      }
+
+      // Fallback: modal simples
+      const overlay = document.createElement('div');
+      overlay.id = 'sp-paywall-fallback';
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);padding:20px;';
+      overlay.innerHTML = `
+        <div style="background:#fff;border-radius:16px;padding:32px 28px;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+          <div style="font-size:48px;margin-bottom:12px;">${msg.icon}</div>
+          <h3 style="margin:0 0 8px;font-size:18px;color:#1a1a1a;">${msg.title}</h3>
+          <p style="margin:0 0 24px;font-size:14px;color:#6b7280;">${msg.subtitle}</p>
+          <a href="/planos" style="display:block;background:#0d7de0;color:#fff;padding:13px;border-radius:9px;font-weight:700;font-size:15px;text-decoration:none;margin-bottom:10px;">Ver Planos</a>
+          <button onclick="document.getElementById('sp-paywall-fallback').remove();document.body.style.overflow='';"
+            style="background:none;border:none;color:#94a3b8;font-size:14px;cursor:pointer;font-family:inherit;">Cancelar</button>
+        </div>`;
+      overlay.addEventListener('click', e => {
+        if (e.target === overlay) { overlay.remove(); document.body.style.overflow = ''; }
+      });
+      document.body.appendChild(overlay);
+    },
+
+    // ── Ativa plano após pagamento ────────────────────────────────────────
+    async activatePlan(planKey) {
+      const sb  = getSupabaseClient();
+      const uid = getUserId();
+
+      if (sb && uid) {
+        await sb.from('profiles').update({
+          plan:       planKey,
+          updated_at: new Date().toISOString(),
+        }).eq('id', uid);
+      }
+
+      this._plan = planKey;
+      localStorage.setItem(LS_PLAN_KEY,    planKey);
+      localStorage.setItem(LS_CHECKED_KEY, String(Date.now()));
+      this._applyAccess();
+    },
+
+    // Ativa checkout (compatibilidade com código existente)
+    checkout(planKey) {
+      localStorage.setItem('pendingPlan', planKey);
+      window.location.href = MP_LINKS[planKey] || '/planos';
+    },
   };
 
-  // Auto-init quando DOM estiver pronto
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+  // ── Verifica retorno do Mercado Pago em qualquer página ────────────────
+  (function checkPaymentReturn() {
+    const params     = new URLSearchParams(window.location.search);
+    const paymentId  = params.get('payment_id') || params.get('collection_id');
+    const status     = params.get('status')     || params.get('collection_status');
+    const pendingPlan = localStorage.getItem('pendingPlan');
+
+    if ((paymentId || status === 'approved') && pendingPlan) {
+      localStorage.removeItem('pendingPlan');
+      // Aguarda o guard estar pronto para ativar o plano
+      function tryActivate(tries) {
+        if (tries > 30) return;
+        if (window.PlanGuard && window.PlanGuard._ready) {
+          window.PlanGuard.activatePlan(pendingPlan);
+        } else {
+          setTimeout(() => tryActivate(tries + 1), 200);
+        }
+      }
+      tryActivate(0);
+    }
+  })();
 
 })();
