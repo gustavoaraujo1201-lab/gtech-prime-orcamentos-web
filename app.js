@@ -847,28 +847,6 @@ if (closePreview) closePreview.addEventListener("click",()=>previewModal&&previe
 const downloadPdfBtn = document.getElementById('downloadPdfBtn');
 if (downloadPdfBtn) downloadPdfBtn.addEventListener("click",()=>{ if (currentPreviewQuoteId) generatePDFFromQuote(currentPreviewQuoteId); });
 
-// ========== PRINT ==========
-function triggerPrint(htmlContent, title=''){
-  const win = window.open('', '_blank', 'width=900,height=700');
-  if (!win){
-    showNotification('Bloqueador de pop-up ativo. Permita pop-ups para imprimir.','error');
-    return;
-  }
-  win.document.open();
-  win.document.write(`<!DOCTYPE html><html lang="pt-BR"><head>
-    <meta charset="utf-8">
-    <title>${title}</title>
-    <style>
-      *{box-sizing:border-box;}
-      @page{margin:1.5cm;size:A4 portrait;}
-      body{margin:0;padding:20px;font-family:Arial,Helvetica,sans-serif;}
-      @media print{body{padding:0;}}
-    </style>
-  </head><body>${htmlContent}</body></html>`);
-  win.document.close();
-  win.onload = () => { win.focus(); win.print(); };
-}
-
 if (printBtn){
   printBtn.addEventListener("click",()=>{
     const content = previewArea ? previewArea.innerHTML : "";
@@ -1067,8 +1045,8 @@ function buildPdfClassico(q, issuer, client) {
     .total-label{font-weight:700;color:#0d7de0;font-size:12pt;}
     .total-value{font-weight:900;color:#0d7de0;font-size:15pt;}
     .sig-block{text-align:center;margin-top:120px;margin-bottom:30px;}
-    .footer{text-align:center;font-size:9pt;color:#9ca3af;margin-top:16px;padding-top:8px;border-top:1px solid #e5e7eb;}
-    @media print{body{padding:0;}}
+    .footer{position:fixed;bottom:0;left:0;right:0;text-align:center;font-size:9pt;color:#9ca3af;padding:7px 0;border-top:1px solid #e5e7eb;background:#fff;}
+    @media print{body{padding:0;} .footer{position:fixed;bottom:0;left:0;right:0;}}
   </style></head><body>
   ${watermark}
   ${logoHtml}
@@ -1151,7 +1129,8 @@ function buildPdfModerno(q, issuer, client) {
     .total-row{background:#0d7de0;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-radius:6px;margin-top:12px;}
     .total-label{font-size:13pt;font-weight:700;}
     .total-value{font-size:18pt;font-weight:900;}
-    .footer{background:#f8fafc;padding:14px 36px;text-align:center;font-size:9pt;color:#9ca3af;border-top:1px solid #e5e7eb;margin-top:24px;}
+    .footer{position:fixed;bottom:0;left:0;right:0;background:#f8fafc;padding:8px 36px;text-align:center;font-size:9pt;color:#9ca3af;border-top:1px solid #e5e7eb;}
+    @media print{.footer{position:fixed;bottom:0;left:0;right:0;}}
     @media print{@page{margin:0;}}
   </style></head><body>
   ${watermark}
@@ -1283,7 +1262,7 @@ function buildPdfMinimalista(q, issuer, client) {
     <div style="width:45%;border-top:1px solid #1a1a1a;"></div>
     <div style="font-size:10pt;font-weight:700;margin-top:8px;">${escapeHtml(issuer.name||'')}</div>
   </div>
-  <div style="font-size:9pt;color:#d1d5db;margin-top:20px;">Orçamento gerado em: ${dateOnly} • SoftPrime</div>
+  <div style="position:fixed;bottom:0;left:0;right:0;font-size:9pt;color:#d1d5db;text-align:center;padding:7px 0;border-top:1px solid #f3f4f6;background:#fff;">Orçamento gerado em: ${dateOnly} • SoftPrime</div>
 </body></html>`;
 }
 
@@ -1385,7 +1364,8 @@ function exportQuoteDoc(quoteId) {
   table.items{width:100%;border-collapse:collapse;margin-top:10px;}
   table.items th{background:#0d7de0;color:#fff;border:1px solid #0a5fb8;padding:8px 10px;font-size:10pt;font-weight:bold;}
   table.items td{border:1px solid #ccc;padding:8px 10px;font-size:10pt;}
-  .footer{text-align:center;font-size:9pt;color:#9ca3af;margin-top:16px;}
+  .footer{position:fixed;bottom:0;left:0;right:0;text-align:center;font-size:9pt;color:#9ca3af;padding:7px 0;border-top:1px solid #e5e7eb;background:#fff;}
+  @media print{.footer{position:fixed;bottom:0;left:0;right:0;}}
 </style></head>
 <body>
   ${watermark}
@@ -1659,7 +1639,6 @@ function renderQuoteHtml(q, issuer, client){
       <div style="margin-top:6px;color:#78350f;font-size:13px;white-space:pre-wrap;">${escapeHtml(q.notes)}</div>
     </div>`:'';
   return `
-    <style>@media print{.sig-line{margin-top:120px!important;}}</style>
     <div style="font-family:Arial,Helvetica,sans-serif;max-width:760px;margin:0 auto;padding:16px;color:#1a1a1a;position:relative;">
       ${watermarkHtml}
       ${logoHtml}
@@ -1691,11 +1670,11 @@ function renderQuoteHtml(q, issuer, client){
         </tr>
       </table>
       ${notesHtml}
-      <div style="margin-top:40px;margin-bottom:16px;text-align:center;" class="sig-line">
+      <div style="margin-top:200px;margin-bottom:16px;text-align:center;">
         <div style="width:55%;border-top:1.5px solid #1a1a1a;margin:0 auto;"></div>
         <div style="font-weight:700;font-size:13px;margin-top:8px;">${escapeHtml(issuer.name||'')}</div>
       </div>
-      <div style="text-align:center;font-size:10px;color:#9ca3af;">Orçamento gerado em: ${escapeHtml(dateOnly)}</div>
+      <div style="position:fixed;bottom:0;left:0;right:0;text-align:center;font-size:10px;color:#9ca3af;padding:7px 0;border-top:1px solid #e5e7eb;background:#fff;">Orçamento gerado em: ${escapeHtml(dateOnly)}</div>
     </div>`;
 }
 
