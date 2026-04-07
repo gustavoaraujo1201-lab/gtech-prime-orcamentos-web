@@ -171,64 +171,32 @@
       #sp-toast{bottom:80px!important;right:12px!important;left:12px!important;max-width:none!important;}
     }
   </style>
-  <title>Orçamentos Salvos — SoftPrime</title>
+  <title>Cadastro Cliente — SoftPrime</title>
   <style>
-    .quotes-layout{display:grid;grid-template-columns:240px 1fr;gap:20px;align-items:flex-start;}
-    .qs-filters-card{background:#fff;border:1px solid rgba(20,30,40,0.12);border-radius:10px;padding:18px;box-shadow:0 2px 12px rgba(20,30,40,0.08);margin-bottom:14px;}
-    .qs-filter-title{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:0.6px;margin-bottom:10px;}
-    .sp-filter-chips{display:flex;flex-direction:column;gap:6px;}
-    .sp-chip{padding:5px 12px;background:#fff;border:1.5px solid #e2e8f0;border-radius:20px;font-size:12px;font-weight:500;color:#475569;cursor:pointer;transition:all 0.15s;font-family:inherit;white-space:normal;word-break:break-word;text-align:left;width:100%;display:block;}
-    .sp-chip:hover{border-color:#0d7de0;color:#0d7de0;}
-    .sp-chip.active{background:#0d7de0;color:#fff;border-color:#0d7de0;box-shadow:0 2px 8px rgba(13,125,224,0.25);}
-    .sp-filter-clear{margin-top:10px;padding:7px 14px;background:#fee2e2;color:#dc2626;border:1px solid #fecaca;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;width:100%;}
-    .sp-filter-clear:hover{background:#fecaca;}
-    .qs-search-card{background:#fff;border:1px solid rgba(20,30,40,0.12);border-radius:10px;padding:14px 16px 10px;margin-bottom:14px;box-shadow:0 2px 12px rgba(20,30,40,0.08);}
-    .sp-search-box{display:flex;align-items:center;background:#f9fafb;border:1.5px solid #e2e8f0;border-radius:10px;padding:0 14px;gap:8px;transition:all 0.2s;}
-    .sp-search-box:focus-within{border-color:#0d7de0;box-shadow:0 0 0 3px rgba(13,125,224,0.10);background:#fff;}
-    .sp-search-box>span{color:#94a3b8;font-size:15px;flex-shrink:0;}
-    .sp-search-input{flex:1;border:none;outline:none;background:transparent;padding:11px 0;font-size:13.5px;color:#1e293b;font-family:inherit;}
-    .sp-search-input::placeholder{color:#94a3b8;}
-    .sp-search-clear{background:none;border:none;color:#94a3b8;cursor:pointer;font-size:13px;padding:3px 5px;border-radius:4px;display:none;}
-    .sp-search-clear:hover{color:#475569;background:#f1f5f9;}
-    .sp-results-info{margin-top:8px;font-size:11.5px;color:#94a3b8;min-height:16px;}
-    .sp-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;color:#94a3b8;text-align:center;gap:12px;background:#fff;border-radius:10px;border:1px solid rgba(20,30,40,0.10);}
-    .sp-empty-icon{width:64px;height:64px;background:#f8fafc;border:2px dashed #e2e8f0;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px;}
-    .sp-empty h4{margin:0;font-size:15px;color:#64748b;font-weight:600;}
-    .sp-empty p{margin:0;font-size:13px;}
-    .sp-card{background:#fff;border:1.5px solid #e8edf5;border-radius:12px;padding:16px 18px;margin-bottom:10px;cursor:default;transition:all 0.22s;position:relative;overflow:hidden;}
-    .sp-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,#0d7de0,#0a5fb8);border-radius:3px 0 0 3px;transform:scaleY(0);transition:transform 0.22s;}
-    .sp-card:hover{border-color:#c7d8f0;box-shadow:0 4px 20px rgba(13,125,224,0.10);}
-    .sp-card:hover::before{transform:scaleY(1);}
-    .sp-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;}
-    .sp-card-num{font-size:15px;font-weight:700;color:#0d7de0;}
-    .sp-card-badge{background:#f0f7ff;color:#0d7de0;border:1px solid #bfdbfe;border-radius:20px;font-size:12px;font-weight:600;padding:3px 12px;white-space:nowrap;}
-    .sp-card-parties{display:flex;gap:24px;margin-top:10px;flex-wrap:wrap;}
-    .sp-card-party{display:flex;flex-direction:column;gap:2px;}
-    .sp-card-party-label{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;}
-    .sp-card-party-name{font-size:13px;font-weight:600;color:#1e293b;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-    .sp-card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:12px;padding-top:10px;border-top:1px solid #f1f5f9;flex-wrap:wrap;gap:8px;}
-    .sp-card-date{font-size:12px;color:#94a3b8;}
-    .sp-card-btns{display:flex;gap:6px;flex-wrap:wrap;}
-    .sp-card-btn{padding:6px 12px;font-size:12px;border-radius:7px;border:1px solid #e2e8f0;background:#fff;color:#475569;cursor:pointer;font-family:inherit;font-weight:500;transition:all 0.15s;}
-    .sp-card-btn:hover{border-color:#0d7de0;color:#0d7de0;background:#f0f7ff;}
-    .sp-card-btn.danger{color:#dc2626;}
-    .sp-card-btn.danger:hover{border-color:#fca5a5;background:#fef2f2;}
-    .search-highlight{background:#fef08a;border-radius:2px;padding:0 1px;}
-    @media(max-width:800px){.quotes-layout{grid-template-columns:1fr;}}
-    .share-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:9000;align-items:center;justify-content:center;}
-    .share-modal-overlay.open{display:flex;animation:smIn .2s ease;}
-    @keyframes smIn{from{opacity:0}to{opacity:1}}
-    .share-modal-box{background:#fff;border-radius:14px;padding:24px;width:100%;max-width:320px;box-shadow:0 20px 60px rgba(0,0,0,0.25);text-align:center;}
-    .share-modal-title{font-size:15px;font-weight:700;color:#1e293b;margin-bottom:6px;}
-    .share-modal-sub{font-size:12px;color:#94a3b8;margin-bottom:20px;}
-    .share-modal-btns{display:flex;flex-direction:column;gap:10px;}
-    .share-modal-btn{display:flex;align-items:center;justify-content:center;gap:10px;padding:13px 20px;border-radius:10px;border:none;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all 0.18s;}
-    .share-modal-btn.wpp{background:#25D366;color:#fff;}
-    .share-modal-btn.wpp:hover{background:#1ebe5d;}
-    .share-modal-btn.email{background:#0d7de0;color:#fff;}
-    .share-modal-btn.email:hover{background:#0a5fb8;}
-    .share-modal-cancel{margin-top:14px;background:none;border:none;font-family:inherit;font-size:13px;color:#94a3b8;cursor:pointer;padding:4px 8px;border-radius:6px;}
-    .share-modal-cancel:hover{color:#475569;background:#f1f5f9;}
+    /* ── Abas Emissor / Cliente ── */
+    .cad-tabs {
+      display: flex; gap: 0; margin-bottom: 20px;
+      background: #f1f5f9; border-radius: 10px; padding: 4px;
+    }
+    .cad-tab {
+      flex: 1; padding: 12px 16px; border: none; border-radius: 8px;
+      background: transparent; color: #6b7280;
+      font-family: inherit; font-size: 15px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .cad-tab:hover { background: rgba(255,255,255,0.7); color: #1a1a1a; }
+    .cad-tab.active { background: #fff; color: #0d7de0; box-shadow: 0 2px 8px rgba(0,0,0,0.09); }
+    .cad-tab .tab-badge {
+      background: #e0edff; color: #0d7de0;
+      font-size: 11px; font-weight: 700;
+      padding: 2px 8px; border-radius: 20px; min-width: 22px; text-align: center;
+    }
+    .cad-tab.active .tab-badge { background: #0d7de0; color: #fff; }
+    .cad-panel { display: none; }
+    .cad-panel.active { display: block; }
+    .cadastro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media(max-width:700px){ .cadastro-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -243,7 +211,7 @@
             <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
           </svg>
         </button>
-        <span class="mobile-header-title">Soft<span style="color:#7c3aed;">Prime</span> <span style="font-weight:400;opacity:0.6;font-size:13px;">— Orçamentos</span></span>
+        <span class="mobile-header-title">Soft<span style="color:#7c3aed;">Prime</span> <span style="font-weight:400;opacity:0.6;font-size:13px;">— Cad. Cliente</span></span>
       </div>
       <div class="header-actions">
         <button class="profile-btn" id="profileBtn" title="Meu Perfil">
@@ -274,11 +242,11 @@
           <span class="nav-icon">🏢</span>
           <span>Cad. Emissor</span>
         </a>
-        <a href="/cadastro_cliente" class="sidebar-btn">
+        <a href="/cadastro_cliente" class="sidebar-btn active">
           <span class="nav-icon">👤</span>
           <span>Cad. Cliente</span>
         </a>
-        <a href="/orcamentos_salvos" class="sidebar-btn active">
+        <a href="/orcamentos_salvos" class="sidebar-btn">
           <span class="nav-icon">💼</span>
           <span>Orçamentos Salvos</span>
         </a>
@@ -299,72 +267,58 @@
     <div class="screen">
 
       <div class="screen-hero">
-        <h2>💼 Orçamentos Salvos</h2>
-        <p>Gerencie todos os seus orçamentos</p>
+        <h2>👤 Cadastro de Cliente</h2>
+        <p>Gerencie seus clientes cadastrados</p>
+        <div class="hero-stats">
+          <div class="hero-stat"><div class="hero-stat-value" id="totalClients">0</div><div class="hero-stat-label">Clientes</div></div>
+        </div>
       </div>
 
-      <div class="quotes-layout">
-        <!-- Filtros -->
-        <div>
-          <div class="qs-filters-card">
-            <div class="qs-filter-title">🏢 Filtrar por Emissor</div>
-            <div class="sp-filter-chips" id="spIssuerChips"></div>
-          </div>
-          <div class="qs-filters-card">
-            <div class="qs-filter-title">👤 Filtrar por Cliente</div>
-            <div class="sp-filter-chips" id="spClientChips"></div>
-          </div>
-          <button class="sp-filter-clear" id="spFilterClear" style="display:none;">✕ Limpar filtros</button>
-        </div>
-        <!-- Lista -->
-        <div>
-          <div class="qs-search-card">
-            <div class="sp-search-box">
-              <span>🔍</span>
-              <input type="text" class="sp-search-input" id="spSearch" placeholder="Pesquisar por número, cliente, emissor, valor..." autocomplete="off" />
-              <button class="sp-search-clear" id="spClear">✕</button>
-            </div>
-            <div class="sp-results-info" id="spResultsInfo"></div>
-          </div>
-          <div id="spList">
-            <div class="sp-empty">
-              <div class="sp-empty-icon">📭</div>
-              <h4>Nenhum orçamento ainda</h4>
-              <p>Crie seu primeiro orçamento na tela <a href="/index" style="color:#0d7de0;">Início</a></p>
-            </div>
-          </div>
-        </div>
+      <!-- elementos ocultos: form emissor (exigido pelo app.js) -->
+      <div style="display:none;">
+        <div id="issuerLogoPreview"><img id="issuerLogoImg"/></div>
+        <input type="file" id="issuerLogo"/>
+        <button id="removeLogoBtn"></button>
+        <form id="issuerForm"><input id="issuerName"/><input id="issuerCnpjCpf"/><textarea id="issuerAddress"></textarea><input id="issuerPhone"/><button id="issuerSubmitBtn"></button><button id="issuerCancelBtn"></button></form>
+        <ul id="issuerList"></ul>
       </div>
+
+      <!-- ── PAINEL CLIENTE ── -->
+      <div id="panelCliente">
+
+        <div class="card" style="margin-bottom:16px;">
+          <h4>👤 Dados do Cliente</h4>
+          <form id="clientForm" class="form-grid" autocomplete="off" style="margin-top:12px;">
+            <div class="full"><input id="clientName" placeholder="Nome / Empresa *" required aria-label="Nome do cliente" /></div>
+            <div><input id="clientCnpjCpf" placeholder="CPF / CNPJ" /></div>
+            <div><input id="clientPhone" placeholder="Telefone" type="tel" /></div>
+            <div class="full"><textarea id="clientAddress" placeholder="Endereço completo" rows="2"></textarea></div>
+            <div class="form-actions">
+              <button id="clientSubmitBtn" class="btn btn-primary" type="submit">Adicionar Cliente</button>
+              <button id="clientCancelBtn" class="btn btn-outline" type="button">Cancelar</button>
+            </div>
+          </form>
+        </div>
+
+        <div class="card">
+          <h4>👥 Clientes Cadastrados</h4>
+          <ul id="clientList" class="list"></ul>
+        </div>
 
       <!-- elementos ocultos exigidos pelo app.js -->
       <div style="display:none;">
         <select id="selectIssuer"></select><select id="selectClient"></select>
         <input id="quoteNumber"/><input id="quoteDate" type="date"/><textarea id="notes"></textarea>
-        <table><tbody id="itemsBody"></tbody></table><button id="addItemBtn"></button>
+        <tbody id="itemsBody"></tbody><button id="addItemBtn"></button>
         <span id="subtotal"></span><span id="grandTotal"></span>
         <button id="saveQuoteBtn"></button><button id="cancelEditBtn"></button>
         <ul id="quotesList"></ul><input id="quotesSearch"/><button id="clearSearch"></button>
         <div id="filterResultsCount"></div>
-        <ul id="issuerList"></ul><ul id="clientList"></ul>
-        <form id="issuerForm"><input id="issuerName"/><input id="issuerCnpjCpf"/><textarea id="issuerAddress"></textarea><input id="issuerPhone"/><input id="issuerLogo" type="file"/><div id="issuerLogoPreview"><img id="issuerLogoImg"/></div><button id="removeLogoBtn"></button><button id="issuerSubmitBtn"></button><button id="issuerCancelBtn"></button></form>
-        <form id="clientForm"><input id="clientName"/><input id="clientCnpjCpf"/><textarea id="clientAddress"></textarea><input id="clientPhone"/><button id="clientSubmitBtn"></button><button id="clientCancelBtn"></button></form>
+        <div id="previewModal" class="modal hidden"><div class="modal-box"><div id="previewArea"></div><button id="closePreview"></button><button id="printBtn"></button><button id="downloadPdfBtn"></button></div></div>
       </div>
-    </div>
 
-    <!-- Modal visualização -->
-    <div id="previewModal" class="modal hidden" role="dialog">
-      <div class="modal-box">
-        <button id="closePreview" class="modal-close">×</button>
-        <h3 style="margin-bottom:20px;font-size:20px;">Visualização do Orçamento</h3>
-        <div id="previewArea" style="border:1px solid #e5e7eb;padding:20px;border-radius:8px;background:#fff;"></div>
-        <div class="modal-actions">
-          <button id="downloadPdfBtn" class="btn btn-primary">📥 Baixar PDF</button>
-          <button id="printBtn" class="btn btn-outline">🖨️ Imprimir</button>
-        </div>
-      </div>
+      <footer class="footer"><p>© 2026 Desenvolvido por <strong>SoftPrime</strong> - Todos os direitos reservados</p></footer>
     </div>
-
-    <footer class="footer"><p>© 2026 Desenvolvido por <strong>SoftPrime</strong> - Todos os direitos reservados</p></footer>
   </div>
 
 
@@ -392,9 +346,10 @@
     <div class="modal-box" style="max-width:480px;">
       <button class="modal-close" id="closeProfileModal">×</button>
       <div style="margin:-24px -24px 24px;padding:28px 24px 24px;background:linear-gradient(135deg,#6366f1,#8b5cf6);border-radius:12px 12px 0 0;display:flex;align-items:center;gap:16px;">
+        <!-- Avatar clicável com dropdown -->
         <div style="position:relative;flex-shrink:0;" id="avatarClickArea">
           <div id="profileModalAvatar" style="width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,0.2);color:#fff;font-size:24px;font-weight:700;display:flex;align-items:center;justify-content:center;border:3px solid rgba(255,255,255,0.5);overflow:hidden;cursor:pointer;transition:filter 0.2s;flex-shrink:0;background-size:cover;background-position:center;">?</div>
-          <div style="position:absolute;bottom:2px;right:2px;width:24px;height:24px;border-radius:50%;background:#6366f1;border:2px solid #fff;display:flex;align-items:center;justify-content:center;pointer-events:none;">
+          <div id="avatarCameraIcon" style="position:absolute;bottom:2px;right:2px;width:24px;height:24px;border-radius:50%;background:#6366f1;border:2px solid #fff;display:flex;align-items:center;justify-content:center;pointer-events:none;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="3"/></svg>
           </div>
           <input type="file" id="avatarFileInput" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none;" />
@@ -460,491 +415,21 @@
   <script src="plan-guard.js"></script>
   <script src="app.js"></script>
   <script>
-    // ── Painel de orçamentos ──────────────────────────────────────────────────
-    const spSearch      = document.getElementById('spSearch');
-    const spClear       = document.getElementById('spClear');
-    const spList        = document.getElementById('spList');
-    const spInfo        = document.getElementById('spResultsInfo');
-    const spIssuerChips = document.getElementById('spIssuerChips');
-    const spClientChips = document.getElementById('spClientChips');
-    const spFilterClear = document.getElementById('spFilterClear');
-
-    let spQuery='', spIssuerFilter='', spClientFilter='';
-
-    function normalizeStr2(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
-    function highlight2(text, q){
-      if (!q) return String(text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      const nt=normalizeStr2(text), nq=normalizeStr2(q);
-      const idx=nt.indexOf(nq);
-      if(idx===-1) return String(text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      const safe=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      return safe(text.slice(0,idx))+'<mark class="search-highlight">'+safe(text.slice(idx,idx+nq.length))+'</mark>'+safe(text.slice(idx+nq.length));
+    // ── Contadores (página cliente) ──
+    function renderCadastroStats() {
+      if (typeof store === 'undefined') return;
+      const nc = (store.clients || []).length;
+      const tc = document.getElementById('totalClients');
+      if (tc) tc.textContent = nc;
     }
-
-    function renderPanel(){
-      if(typeof store==='undefined') return;
-      const quotes=[...(store.quotes||[])].reverse();
-      const issuers=store.issuers||[], clients=store.clients||[];
-
-      // Chips emissores
-      spIssuerChips.innerHTML='';
-      const usedIssuers=[...new Set(quotes.map(q=>q.issuerId))].map(id=>issuers.find(i=>i.id===id)).filter(Boolean);
-      usedIssuers.forEach(iss=>{
-        const cnt=quotes.filter(q=>q.issuerId===iss.id).length;
-        const btn=document.createElement('button');
-        btn.className='sp-chip'+(spIssuerFilter===iss.id?' active':'');
-        btn.textContent=iss.name+' ('+cnt+')';
-        btn.onclick=()=>{ spIssuerFilter=spIssuerFilter===iss.id?'':iss.id; renderPanel(); };
-        spIssuerChips.appendChild(btn);
-      });
-
-      // Chips clientes
-      spClientChips.innerHTML='';
-      const usedClients=[...new Set(quotes.map(q=>q.clientId))].map(id=>clients.find(c=>c.id===id)).filter(Boolean);
-      usedClients.forEach(cli=>{
-        const cnt=quotes.filter(q=>q.clientId===cli.id).length;
-        const btn=document.createElement('button');
-        btn.className='sp-chip'+(spClientFilter===cli.id?' active':'');
-        btn.textContent=cli.name+' ('+cnt+')';
-        btn.onclick=()=>{ spClientFilter=spClientFilter===cli.id?'':cli.id; renderPanel(); };
-        spClientChips.appendChild(btn);
-      });
-
-      spFilterClear.style.display=(spIssuerFilter||spClientFilter)?'block':'none';
-
-      // Filtro
-      let filtered=quotes;
-      if(spIssuerFilter) filtered=filtered.filter(q=>q.issuerId===spIssuerFilter);
-      if(spClientFilter) filtered=filtered.filter(q=>q.clientId===spClientFilter);
-      if(spQuery){
-        const nq=normalizeStr2(spQuery);
-        filtered=filtered.filter(q=>{
-          const iss=issuers.find(i=>i.id===q.issuerId)||{};
-          const cli=clients.find(c=>c.id===q.clientId)||{};
-          return [q.numero||'',iss.name||'',cli.name||'',new Date(q.createdAt).toLocaleDateString('pt-BR'),Number(q.total||0).toFixed(2)].some(f=>normalizeStr2(f).includes(nq));
-        });
-      }
-
-      if(filtered.length>0) spInfo.textContent=spQuery?`Exibindo ${filtered.length} de ${quotes.length} orçamento${quotes.length!==1?'s':''}`:quotes.length+' orçamento'+(quotes.length!==1?'s':'');
-      else spInfo.textContent='';
-
-      if(!filtered.length){
-        spList.innerHTML=quotes.length?'<div class="sp-empty"><div class="sp-empty-icon">🔍</div><h4>Nenhum resultado</h4><p>Tente outros termos</p></div>':'<div class="sp-empty"><div class="sp-empty-icon">📭</div><h4>Nenhum orçamento ainda</h4><p>Crie seu primeiro orçamento na tela <a href=\"/index\" style=\"color:#0d7de0;\">Início</a></p></div>';
-        return;
-      }
-
-      spList.innerHTML='';
-      filtered.forEach(q=>{
-        const iss=issuers.find(i=>i.id===q.issuerId)||{};
-        const cli=clients.find(c=>c.id===q.clientId)||{};
-        const dateStr=q.createdAt?new Date(q.createdAt).toLocaleDateString('pt-BR'):'';
-        const totalFmt='R$ '+Number(q.total||0).toLocaleString('pt-BR',{minimumFractionDigits:2});
-        const card=document.createElement('div'); card.className='sp-card';
-        card.innerHTML=`
-          <div class="sp-card-top">
-            <span class="sp-card-num">📄 ${highlight2(q.numero||q.id,spQuery)}</span>
-            <span class="sp-card-badge">${totalFmt}</span>
-          </div>
-          <div class="sp-card-parties">
-            <div class="sp-card-party"><div class="sp-card-party-label">De</div><div class="sp-card-party-name">${highlight2(iss.name||'—',spQuery)}</div></div>
-            <div class="sp-card-party"><div class="sp-card-party-label">Para</div><div class="sp-card-party-name">${highlight2(cli.name||'—',spQuery)}</div></div>
-          </div>
-          <div class="sp-card-footer">
-            <span class="sp-card-date">📅 ${dateStr}</span>
-            <div class="sp-card-btns">
-              <button class="sp-card-btn" onclick="openPreview('${q.id}')">👁️ Ver</button>
-              <button class="sp-card-btn" onclick="generatePDFFromQuote('${q.id}')">📥 PDF</button>
-              <button class="sp-card-btn" onclick="exportQuoteDoc('${q.id}')">📄 Word</button>
-              <button class="sp-card-btn share-btn" onclick="openShareModal('${q.id}')">🔗 Compartilhar</button>
-              <button class="sp-card-btn" onclick="startEditMode_redirect('${q.id}')">✏️ Editar</button>
-              <button class="sp-card-btn danger" onclick="deleteQuote('${q.id}')">🗑️</button>
-            </div>
-          </div>`;
-        spList.appendChild(card);
-      });
-    }
-
-    // ── Aguarda o app.js terminar de carregar antes de executar ações ─────────
-    function waitForApp(timeout = 8000) {
-      return new Promise((resolve, reject) => {
-        if (window._appInitialized && typeof store !== 'undefined' && Array.isArray(store.quotes)) {
-          resolve(); return;
-        }
-        const start = Date.now();
-        const check = setInterval(() => {
-          if (window._appInitialized && typeof store !== 'undefined' && Array.isArray(store.quotes)) {
-            clearInterval(check);
-            resolve();
-          } else if (Date.now() - start > timeout) {
-            clearInterval(check);
-            reject(new Error('App não inicializou a tempo'));
-          }
-        }, 100);
-      });
-    }
-
-    function startEditMode_redirect(id) {
-      sessionStorage.setItem('editQuoteId', id);
-      window.location.href = '/index';
-    }
-
-    async function deleteQuote(id) {
-      if (!confirm('Tem certeza que deseja excluir este orçamento? Esta ação não pode ser desfeita.')) return;
-      try {
-        // Aguarda o app estar 100% pronto antes de executar
-        await waitForApp();
-        // Remove do store local imediatamente (feedback visual instantâneo)
-        if (typeof store !== 'undefined' && Array.isArray(store.quotes)) {
-          store.quotes = store.quotes.filter(q => q.id !== id);
-        }
-        renderPanel();
-        // Exclui do banco em segundo plano
-        if (typeof dbDeleteQuote === 'function') {
-          await dbDeleteQuote(id);
-        } else {
-          const sb = typeof getSupabase === 'function' ? getSupabase() : null;
-          if (sb) await sb.from('quotes').delete().eq('id', id);
-        }
-        showNotification('Orçamento excluído com sucesso! ✅', 'success');
-      } catch(err) {
-        console.error('[deleteQuote]', err);
-        // Se falhou, recarrega os dados reais do banco
-        if (typeof loadAllData === 'function') {
-          await loadAllData();
-          renderPanel();
-        }
-        showNotification('Erro ao excluir. Tente novamente.', 'error');
-      }
-    }
-
-    // ── Carrega jsPDF sob demanda (leve, funciona em mobile) ─────────────────
-    function loadJsPDF() {
-      return new Promise((resolve, reject) => {
-        if (window.jspdf && window.jspdf.jsPDF) { resolve(); return; }
-        const s = document.createElement('script');
-        s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-        s.onload = () => resolve();
-        s.onerror = () => reject(new Error('Falha ao carregar jsPDF'));
-        document.head.appendChild(s);
-      });
-    }
-
-    // ── Gera PDF com jsPDF puro — sem canvas, funciona em mobile ─────────────
-    function buildSharePdfBlob(quoteId) {
-      const q   = store.quotes.find(x => x.id === quoteId);
-      if (!q) throw new Error('Orçamento não encontrado');
-      const iss = (store.issuers||[]).find(i => i.id === q.issuerId) || {};
-      const cli = (store.clients||[]).find(c => c.id === q.clientId) || {};
-      const { jsPDF } = window.jspdf;
-
-      const pdf  = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
-      const W    = pdf.internal.pageSize.getWidth();   // 210
-      const H    = pdf.internal.pageSize.getHeight();  // 297
-      const mL   = 15, mR = 15, mT = 15;
-      const cW   = W - mL - mR;                        // 180
-      let   y    = mT;
-
-      // ── helpers ──────────────────────────────────────────────────────────────
-      const hex2rgb = h => { const n=parseInt(h.replace('#',''),16); return [n>>16&255,(n>>8)&255,n&255]; };
-      const setFill  = h => { const [r,g,b]=hex2rgb(h); pdf.setFillColor(r,g,b); };
-      const setStroke= h => { const [r,g,b]=hex2rgb(h); pdf.setDrawColor(r,g,b); };
-      const setTxt   = h => { const [r,g,b]=hex2rgb(h); pdf.setTextColor(r,g,b); };
-      const mf       = v  => Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});
-      const cleanStr = s  => String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'');  // remove acentos p/ jsPDF
-
-      // ── Título ORÇAMENTO ─────────────────────────────────────────────────────
-      pdf.setFont('helvetica','bold');
-      pdf.setFontSize(22);
-      setTxt('#0d7de0');
-      pdf.text('ORCAMENTO', W/2, y+8, {align:'center'});
-      y += 12;
-
-      pdf.setFont('helvetica','normal');
-      pdf.setFontSize(11);
-      setTxt('#6b7280');
-      pdf.text(cleanStr(q.numero||q.id), W/2, y+5, {align:'center'});
-      y += 12;
-
-      // ── Data de validade (se houver) ─────────────────────────────────────────
-      if (q.validade) {
-        pdf.setFontSize(9); setTxt('#6b7280');
-        pdf.text('Valido ate: ' + cleanStr(q.validade), mL, y+4);
-        y += 7;
-      }
-
-      // ── Boxes Emissor / Destinatário ─────────────────────────────────────────
-      const boxH = 28;
-      const boxW = (cW - 4) / 2;
-
-      // Emissor
-      setFill('#f9fafb'); setStroke('#e0e0e0');
-      pdf.roundedRect(mL, y, boxW, boxH, 2, 2, 'FD');
-      pdf.setFont('helvetica','bold'); pdf.setFontSize(8); setTxt('#0d7de0');
-      pdf.text('EMISSOR', mL+4, y+6);
-      pdf.setFont('helvetica','bold'); pdf.setFontSize(11); setTxt('#1a1a1a');
-      pdf.text(cleanStr(iss.name||'—'), mL+4, y+13, {maxWidth: boxW-8});
-      if (iss.cnpjCpf) { pdf.setFont('helvetica','normal'); pdf.setFontSize(8); setTxt('#6b7280'); pdf.text('CNPJ/CPF: '+cleanStr(iss.cnpjCpf), mL+4, y+19); }
-      if (iss.phone)   { pdf.setFont('helvetica','normal'); pdf.setFontSize(8); setTxt('#555555'); pdf.text('Tel: '+cleanStr(iss.phone), mL+4, y+24); }
-
-      // Destinatário
-      const bx2 = mL + boxW + 4;
-      setFill('#f9fafb'); setStroke('#e0e0e0');
-      pdf.roundedRect(bx2, y, boxW, boxH, 2, 2, 'FD');
-      pdf.setFont('helvetica','bold'); pdf.setFontSize(8); setTxt('#0d7de0');
-      pdf.text('DESTINATARIO', bx2+4, y+6);
-      pdf.setFont('helvetica','bold'); pdf.setFontSize(11); setTxt('#1a1a1a');
-      pdf.text(cleanStr(cli.name||'—'), bx2+4, y+13, {maxWidth: boxW-8});
-      if (cli.cnpjCpf) { pdf.setFont('helvetica','normal'); pdf.setFontSize(8); setTxt('#6b7280'); pdf.text('CNPJ/CPF: '+cleanStr(cli.cnpjCpf), bx2+4, y+19); }
-      if (cli.phone)   { pdf.setFont('helvetica','normal'); pdf.setFontSize(8); setTxt('#555555'); pdf.text('Tel: '+cleanStr(cli.phone), bx2+4, y+24); }
-
-      y += boxH + 8;
-
-      // ── Cabeçalho da tabela de itens ─────────────────────────────────────────
-      const colDesc  = cW * 0.52;
-      const colQtd   = cW * 0.12;
-      const colVUnit = cW * 0.18;
-      const colTot   = cW * 0.18;
-      const rowH     = 8;
-
-      // Posições X iniciais de cada coluna
-      const xDesc  = mL;
-      const xQtd   = xDesc  + colDesc;
-      const xVUnit = xQtd   + colQtd;
-      const xTot   = xVUnit + colVUnit;
-
-      // helper: desenha linhas verticais divisórias entre colunas
-      const drawColDividers = (rowY, rowHgt, divColor) => {
-        setStroke(divColor);
-        pdf.line(xQtd,   rowY, xQtd,   rowY + rowHgt);
-        pdf.line(xVUnit, rowY, xVUnit, rowY + rowHgt);
-        pdf.line(xTot,   rowY, xTot,   rowY + rowHgt);
-      };
-
-      // Cabeçalho
-      setFill('#0d7de0'); setStroke('#0a5fb8');
-      pdf.rect(mL, y, cW, rowH, 'FD');
-      // divisórias do cabeçalho em azul escuro
-      drawColDividers(y, rowH, '#0a5fb8');
-      pdf.setFont('helvetica','bold'); pdf.setFontSize(9); setTxt('#ffffff');
-      pdf.text('Descricao',   xDesc  + 3,           y + 5.5);
-      pdf.text('Qtd',         xQtd   + colQtd/2,    y + 5.5, {align:'center'});
-      pdf.text('Valor Unit.', xVUnit + colVUnit - 3, y + 5.5, {align:'right'});
-      pdf.text('Total',       xTot   + colTot  - 3, y + 5.5, {align:'right'});
-      y += rowH;
-
-      // ── Linhas de itens ──────────────────────────────────────────────────────
-      const items = q.items || [];
-      items.forEach((it, idx) => {
-        const desc = cleanStr(it.descricao||'');
-        // Wrap descrição longa
-        const descLines = pdf.splitTextToSize(desc, colDesc - 6);
-        const lineCount = descLines.length;
-        const cellH = Math.max(rowH, lineCount * 5 + 3);
-
-        // Nova página se necessário
-        if (y + cellH > H - 40) {
-          pdf.addPage();
-          y = mT;
-        }
-
-        // Fundo zebrado
-        if (idx % 2 === 1) { setFill('#f8fafc'); pdf.rect(mL, y, cW, cellH, 'F'); }
-        // Borda externa da linha
-        setStroke('#d1d5db');
-        pdf.rect(mL, y, cW, cellH, 'S');
-        // Divisórias verticais internas
-        drawColDividers(y, cellH, '#d1d5db');
-
-        pdf.setFont('helvetica','normal'); pdf.setFontSize(9); setTxt('#1a1a1a');
-        pdf.text(descLines,                                            xDesc  + 3,           y + 5);
-        pdf.text(String(it.quantidade||0),                             xQtd   + colQtd/2,    y + 5, {align:'center'});
-        pdf.text('R$ ' + mf(it.valorUnitario),                         xVUnit + colVUnit - 3, y + 5, {align:'right'});
-        pdf.setFont('helvetica','bold');
-        pdf.text('R$ ' + mf((it.quantidade||0)*(it.valorUnitario||0)), xTot   + colTot  - 3, y + 5, {align:'right'});
-        y += cellH;
-      });
-
-      // ── Linha de total ───────────────────────────────────────────────────────
-      if (y + 10 > H - 30) { pdf.addPage(); y = mT; }
-      const totW = colVUnit + colTot;
-      const totX = xVUnit;
-      setFill('#eef6ff'); setStroke('#93c5fd');
-      pdf.rect(totX, y, totW, 10, 'FD');
-      pdf.setFont('helvetica','bold'); pdf.setFontSize(10); setTxt('#0d7de0');
-      pdf.text('TOTAL:', totX + 3, y + 6.5);
-      pdf.setFontSize(12);
-      pdf.text('R$ ' + mf(q.total||0), mL + cW - 3, y + 7, {align:'right'});
-      y += 14;
-
-      // ── Observações ──────────────────────────────────────────────────────────
-      if (q.notes) {
-        const noteLines = pdf.splitTextToSize(cleanStr(q.notes), cW - 12);
-        const noteH = noteLines.length * 5 + 10;
-        if (y + noteH > H - 30) { pdf.addPage(); y = mT; }
-        setFill('#fffbeb'); setStroke('#f59e0b');
-        pdf.rect(mL, y, cW, noteH, 'FD');
-        pdf.setFont('helvetica','bold'); pdf.setFontSize(9); setTxt('#1a1a1a');
-        pdf.text('Observacoes:', mL + 4, y + 6);
-        pdf.setFont('helvetica','normal');
-        pdf.text(noteLines, mL + 4, y + 12);
-        y += noteH + 8;
-      }
-
-      // ── Assinatura ───────────────────────────────────────────────────────────
-      y += 18;
-      if (y + 20 > H - 20) { pdf.addPage(); y = mT + 10; }
-      setStroke('#1a1a1a');
-      const sigX1 = W/2 - 35, sigX2 = W/2 + 35;
-      pdf.line(sigX1, y, sigX2, y);
-      pdf.setFont('helvetica','bold'); pdf.setFontSize(10); setTxt('#1a1a1a');
-      pdf.text(cleanStr(iss.name||''), W/2, y+6, {align:'center'});
-      y += 14;
-
-      // ── Rodapé fixo no fundo da página ───────────────────────────────────────
-      const dateStr = q.createdAt ? new Date(q.createdAt).toLocaleDateString('pt-BR') : '';
-      pdf.setFont('helvetica','normal'); pdf.setFontSize(8); setTxt('#9ca3af');
-      pdf.text('Orcamento gerado em: ' + dateStr + ' - SoftPrime', W/2, H - 8, {align:'center'});
-
-      return pdf.output('blob');
-    }
-
-    // ── Modal de compartilhamento ─────────────────────────────────────────────
-    function openShareModal(id) {
-      const q = store.quotes.find(x => x.id === id);
-      const iss = (store.issuers||[]).find(i => i.id === q?.issuerId) || {};
-      const cli = (store.clients||[]).find(c => c.id === q?.clientId) || {};
-      const totalFmt = 'R$ ' + Number(q?.total||0).toLocaleString('pt-BR', {minimumFractionDigits:2});
-      const num = q?.numero || id;
-      const fileName = 'orcamento_' + String(num).replace(/[^a-zA-Z0-9_-]/g,'_') + '.pdf';
-
-      const prev = document.getElementById('sp-share-modal');
-      if (prev) prev.remove();
-
-      const modal = document.createElement('div');
-      modal.id = 'sp-share-modal';
-      modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);padding:20px;';
-      modal.innerHTML = `
-        <div style="background:#fff;border-radius:14px;padding:28px 24px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-          <h3 style="margin:0 0 6px;font-size:17px;color:#1a1a1a;">&#128228; Compartilhar Or&#231;amento</h3>
-          <p style="margin:0 0 20px;font-size:13px;color:#6b7280;">Or&#231;amento <strong>${num}</strong> &middot; ${totalFmt}</p>
-          <div style="display:flex;flex-direction:column;gap:10px;">
-            <button id="sp-share-wpp"
-               style="display:flex;align-items:center;gap:10px;padding:13px 16px;background:#25d366;color:#fff;border-radius:9px;border:none;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;width:100%;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-              Compartilhar no WhatsApp
-            </button>
-            <button id="sp-share-email"
-               style="display:flex;align-items:center;gap:10px;padding:13px 16px;background:#0d7de0;color:#fff;border-radius:9px;border:none;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;width:100%;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>
-              Enviar por Email
-            </button>
-            <button id="sp-share-cancel"
-               style="padding:11px 16px;background:#f3f4f6;color:#374151;border:none;border-radius:9px;font-weight:600;font-size:14px;cursor:pointer;font-family:inherit;">
-              Cancelar
-            </button>
-          </div>
-        </div>`;
-
-      modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-      document.body.appendChild(modal);
-      document.getElementById('sp-share-cancel').addEventListener('click', () => modal.remove());
-
-      // ── Spinner CSS ──────────────────────────────────────────────────────────
-      if (!document.getElementById('sp-spin-css')) {
-        const s = document.createElement('style'); s.id='sp-spin-css';
-        s.textContent='@keyframes sp-spin{to{transform:rotate(360deg)}}';
-        document.head.appendChild(s);
-      }
-
-      // ── Helper: seta botão em loading ────────────────────────────────────────
-      function setBtnLoading(btn) {
-        btn.disabled = true;
-        btn._origHTML = btn.innerHTML;
-        btn.innerHTML = '<span style="display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,0.4);border-top-color:#fff;border-radius:50%;animation:sp-spin .7s linear infinite;vertical-align:middle;margin-right:8px;"></span>Gerando PDF...';
-      }
-      function restoreBtn(btn) {
-        btn.disabled = false;
-        btn.innerHTML = btn._origHTML;
-      }
-
-      // ── Helper: gera blob e chama action ─────────────────────────────────────
-      async function withPdfBlob(btn, action) {
-        setBtnLoading(btn);
-        try {
-          await loadJsPDF();
-          const blob = buildSharePdfBlob(id);
-          const blobUrl = URL.createObjectURL(blob);
-          const file = new File([blob], fileName, { type:'application/pdf' });
-          await action(blob, blobUrl, file);
-          setTimeout(() => URL.revokeObjectURL(blobUrl), 60000);
-          modal.remove();
-        } catch(err) {
-          console.error('[SHARE PDF]', err);
-          restoreBtn(btn);
-          showNotification('Erro ao gerar PDF. Tente novamente.', 'error');
-        }
-      }
-
-      // ── WhatsApp ─────────────────────────────────────────────────────────────
-      document.getElementById('sp-share-wpp').addEventListener('click', async function() {
-        await withPdfBlob(this, async (blob, blobUrl, file) => {
-          // Celular com Web Share API (Android/iOS) — compartilha o PDF direto, sem legenda
-          if (navigator.canShare && navigator.canShare({ files:[file] })) {
-            await navigator.share({ files:[file], title:'Orcamento '+num });
-            return;
-          }
-          // Desktop — baixa o PDF e abre WhatsApp Web
-          const msgText = 'Ola! Segue o orcamento *' + num + '*.\n\nDe: ' + (iss.name||'—') + '\nPara: ' + (cli.name||'—') + '\nValor: ' + totalFmt + '\n\n(Anexe o PDF que foi baixado automaticamente)';
-          const a = document.createElement('a');
-          a.href = blobUrl; a.download = fileName; a.click();
-          setTimeout(() => {
-            window.open('https://wa.me/?text=' + encodeURIComponent(msgText), '_blank');
-          }, 600);
-        });
-      });
-
-      // ── Email ─────────────────────────────────────────────────────────────────
-      document.getElementById('sp-share-email').addEventListener('click', async function() {
-        await withPdfBlob(this, async (blob, blobUrl, file) => {
-          const subject = 'Orcamento ' + num + ' - ' + (iss.name||'');
-          const body = 'Ola,\n\nSegue em anexo o orcamento ' + num + '.\n\nDe: ' + (iss.name||'—') + '\nPara: ' + (cli.name||'—') + '\nValor: ' + totalFmt + '\n\nAtenciosamente,\n' + (iss.name||'');
-
-          // Celular com Web Share API — compartilha o PDF direto
-          if (navigator.canShare && navigator.canShare({ files:[file] })) {
-            await navigator.share({ files:[file], title: subject, text: body });
-            return;
-          }
-          // Desktop — baixa o PDF e abre cliente de email
-          const a = document.createElement('a');
-          a.href = blobUrl; a.download = fileName; a.click();
-          setTimeout(() => {
-            window.location.href = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body + '\n\n(Anexe o PDF que foi baixado automaticamente)');
-          }, 600);
-        });
-      });
-    }
-
-        // Busca
-    spSearch && spSearch.addEventListener('input', ()=>{
-      spQuery=spSearch.value;
-      spClear.style.display=spQuery?'block':'none';
-      renderPanel();
+    document.addEventListener('click', e => {
+      if (e.target && e.target.id === 'clientSubmitBtn')
+        setTimeout(renderCadastroStats, 600);
     });
-    spClear && spClear.addEventListener('click', ()=>{ spQuery=''; spSearch.value=''; spClear.style.display='none'; renderPanel(); });
-    spFilterClear && spFilterClear.addEventListener('click', ()=>{ spIssuerFilter=''; spClientFilter=''; spFilterClear.style.display='none'; renderPanel(); });
-
-    // Download PDF no modal
-    document.getElementById('downloadPdfBtn') && document.getElementById('downloadPdfBtn').addEventListener('click', () => {
-      if (typeof currentPreviewQuoteId !== 'undefined' && currentPreviewQuoteId) generatePDFFromQuote(currentPreviewQuoteId);
-    });
-
-    // renderPanel() é chamado diretamente pelo app.js (initApp) após carregar os dados.
-    // Este interval é apenas fallback caso o app.js já tenha rodado antes deste script.
-    const _panelInterval = setInterval(()=>{
-      const ready = typeof store !== 'undefined' && Array.isArray(store.quotes) && window._appInitialized;
-      if (ready) { renderPanel(); clearInterval(_panelInterval); }
-    }, 300);
-    setTimeout(()=>{ clearInterval(_panelInterval); }, 8000);
+    const _statsInterval = setInterval(() => {
+      if (typeof store !== 'undefined') { renderCadastroStats(); clearInterval(_statsInterval); }
+    }, 500);
+    setInterval(renderCadastroStats, 2000);
   </script>
 
   <script>
@@ -1085,8 +570,12 @@
     // ── Avatar: foto de perfil ──
     function applyAvatarPhoto(base64) {
       ['profileModalAvatar','profileAvatar','sidebarProfileAvatar'].forEach(id => {
-        const el=document.getElementById(id); if(!el) return;
-        el.textContent=''; el.style.background=`url(${base64}) center/cover no-repeat`; el.style.backgroundSize='cover'; el.style.backgroundPosition='center';
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = '';
+        el.style.background = `url(${base64}) center/cover no-repeat`;
+        el.style.backgroundSize = 'cover';
+        el.style.backgroundPosition = 'center';
       });
       const ins=document.getElementById('avatarOptInsert'); const chg=document.getElementById('avatarOptChange'); const rem=document.getElementById('avatarOptRemove');
       if(ins) ins.style.display='none'; if(chg) chg.style.display='flex'; if(rem) rem.style.display='flex';
@@ -1095,7 +584,7 @@
       const auth=window.authManager;
       if(auth&&auth.currentUser) localStorage.removeItem('sp_avatar_'+auth.currentUser.id);
       const nameEl=document.getElementById('userName');
-      const initials=getInitials(nameEl?nameEl.textContent.trim():'')||'?';
+      const initials=getInitials(nameEl?nameEl.textContent.trim():'') || '?';
       ['profileModalAvatar','profileAvatar','sidebarProfileAvatar'].forEach(id => {
         const el=document.getElementById(id); if(!el) return;
         el.textContent=initials; el.style.background=''; el.style.backgroundImage=''; el.style.backgroundSize=''; el.style.backgroundPosition='';
