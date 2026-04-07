@@ -49,16 +49,12 @@ let store = { issuers: [], clients: [], quotes: [] };
 
 // ========== QUOTE NUMBER HELPERS ==========
 function computeNextQuoteNumberForIssuer(issuerId, clientId){
+  // Conta quantos orçamentos já existem para esse emissor+cliente
+  // Assim cada cliente tem sua própria sequência independente: 0001, 0002, 0003...
   const filtered = (store.quotes||[]).filter(q =>
     q.issuerId === issuerId && (clientId ? q.clientId === clientId : true)
   );
-  if (!filtered.length) return 1;
-  let max = 0;
-  for (const q of filtered){
-    const m = String(q.numero||'').match(/(\d+)(?!.*\d)/);
-    if (m){ const n = parseInt(m[0],10); if (!isNaN(n) && n > max) max = n; }
-  }
-  return max + 1;
+  return filtered.length + 1;
 }
 function formatQuoteNumber(n){
   return `${new Date().getFullYear()}-${String(n).padStart(4,'0')}`;
