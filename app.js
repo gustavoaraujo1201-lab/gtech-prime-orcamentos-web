@@ -48,11 +48,14 @@ function normalizeStr(str){
 let store = { issuers: [], clients: [], quotes: [] };
 
 // ========== QUOTE NUMBER HELPERS ==========
-function computeNextQuoteNumberForIssuer(issuerId){
-  const issuerQuotes = (store.quotes||[]).filter(q => q.issuerId === issuerId);
-  if (!issuerQuotes.length) return 1;
+function computeNextQuoteNumberForIssuer(issuerId, clientId){
+  // Sequência independente por combinação emissor + cliente
+  const filtered = (store.quotes||[]).filter(q =>
+    q.issuerId === issuerId && (clientId ? q.clientId === clientId : true)
+  );
+  if (!filtered.length) return 1;
   let max = 0;
-  for (const q of issuerQuotes){
+  for (const q of filtered){
     const m = String(q.numero||'').match(/(\d+)(?!.*\d)/);
     if (m){ const n = parseInt(m[0],10); if (!isNaN(n) && n > max) max = n; }
   }
@@ -497,7 +500,8 @@ function recalcTotals(){
 function setDefaultQuoteFields(){
   if (!quoteNumber || !quoteDate || editingQuoteId) return;
   const issuerId = selectIssuer ? selectIssuer.value : null;
-  const n = issuerId ? computeNextQuoteNumberForIssuer(issuerId) : 1;
+  const clientId = selectClient ? selectClient.value : null;
+  const n = issuerId ? computeNextQuoteNumberForIssuer(issuerId, clientId) : 1;
   quoteNumber.value = formatQuoteNumber(n);
   quoteDate.value = new Date().toISOString().slice(0,10);
   if (notes) notes.value = "";
@@ -653,8 +657,6 @@ if (clientForm){
       setLoading(false);
       clientForm.reset(); renderClients(); renderQuotes();
       showNotification("Cliente adicionado com sucesso!","success");
-      // Redireciona para Novo Orçamento após 1.2s
-      setTimeout(function(){ window.location.href = '/index'; }, 1200);
     } catch(err){ console.error("[ERROR] clientForm:",err); setLoading(false); showNotification("Erro ao salvar cliente","error"); }
   });
 }
@@ -732,7 +734,7 @@ if (saveQuoteBtn){
 
       const totals = recalcTotals();
       let numeroValue = (quoteNumber&&quoteNumber.value||"").trim();
-      if (!numeroValue) numeroValue = formatQuoteNumber(computeNextQuoteNumberForIssuer(issuerId));
+      if (!numeroValue) numeroValue = formatQuoteNumber(computeNextQuoteNumberForIssuer(issuerId, clientId));
       const notesVal = (notes&&notes.value||"").trim();
 
       if (editingQuoteId){
@@ -765,8 +767,7 @@ if (saveQuoteBtn){
       currentItems=[{descricao:"",quantidade:1,valorUnitario:0}];
       renderItems(currentItems); renderQuotes(); setDefaultQuoteFields();
       showNotification(`✅ Orçamento ${q.numero} salvo com sucesso!`,"success");
-      // Redireciona para Orçamentos Salvos após 1.2s
-      setTimeout(()=>{ window.location.href = '/orcamentos_salvos'; }, 1200);
+      setTimeout(()=>{ quotesList&&quotesList.scrollIntoView({behavior:'smooth',block:'start'}); }, 300);
     } catch(err){ console.error("[ERROR] saveQuoteBtn:",err); setLoading(false); showNotification("Erro ao salvar orçamento","error"); }
   });
 }
