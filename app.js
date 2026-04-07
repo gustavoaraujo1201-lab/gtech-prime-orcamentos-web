@@ -1045,7 +1045,8 @@ function buildPdfClassico(q, issuer, client) {
     .total-label{font-weight:700;color:#0d7de0;font-size:12pt;}
     .total-value{font-weight:900;color:#0d7de0;font-size:15pt;}
     .sig-block{text-align:center;margin-top:120px;margin-bottom:30px;}
-    .footer{position:fixed;bottom:0;left:0;right:0;text-align:center;font-size:9pt;color:#9ca3af;padding:7px 0;border-top:1px solid #e5e7eb;background:#fff;}
+    .footer{position:fixed;bottom:0;left:0;right:0;text-align:center;font-size:9pt;color:#9ca3af;padding:5px 0;border-top:1px solid #e5e7eb;background:#fff;}
+    body{padding-bottom:30px;}
     @media print{body{padding:0;} .footer{position:fixed;bottom:0;left:0;right:0;}}
   </style></head><body>
   ${watermark}
@@ -1129,7 +1130,7 @@ function buildPdfModerno(q, issuer, client) {
     .total-row{background:#0d7de0;color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;border-radius:6px;margin-top:12px;}
     .total-label{font-size:13pt;font-weight:700;}
     .total-value{font-size:18pt;font-weight:900;}
-    .footer{position:fixed;bottom:0;left:0;right:0;background:#f8fafc;padding:8px 36px;text-align:center;font-size:9pt;color:#9ca3af;border-top:1px solid #e5e7eb;}
+    .footer{position:fixed;bottom:0;left:0;right:0;background:#f8fafc;padding:5px 36px;text-align:center;font-size:9pt;color:#9ca3af;border-top:1px solid #e5e7eb;}
     @media print{.footer{position:fixed;bottom:0;left:0;right:0;}}
     @media print{@page{margin:0;}}
   </style></head><body>
@@ -1262,7 +1263,7 @@ function buildPdfMinimalista(q, issuer, client) {
     <div style="width:45%;border-top:1px solid #1a1a1a;"></div>
     <div style="font-size:10pt;font-weight:700;margin-top:8px;">${escapeHtml(issuer.name||'')}</div>
   </div>
-  <div style="position:fixed;bottom:0;left:0;right:0;font-size:9pt;color:#d1d5db;text-align:center;padding:7px 0;border-top:1px solid #f3f4f6;background:#fff;">Orçamento gerado em: ${dateOnly} • SoftPrime</div>
+  <div style="position:fixed;bottom:0;left:0;right:0;font-size:9pt;color:#d1d5db;text-align:center;padding:5px 0;border-top:1px solid #f3f4f6;background:#fff;">Orçamento gerado em: ${dateOnly} • SoftPrime</div>
 </body></html>`;
 }
 
@@ -1364,7 +1365,7 @@ function exportQuoteDoc(quoteId) {
   table.items{width:100%;border-collapse:collapse;margin-top:10px;}
   table.items th{background:#0d7de0;color:#fff;border:1px solid #0a5fb8;padding:8px 10px;font-size:10pt;font-weight:bold;}
   table.items td{border:1px solid #ccc;padding:8px 10px;font-size:10pt;}
-  .footer{position:fixed;bottom:0;left:0;right:0;text-align:center;font-size:9pt;color:#9ca3af;padding:7px 0;border-top:1px solid #e5e7eb;background:#fff;}
+  .footer{position:fixed;bottom:0;left:0;right:0;text-align:center;font-size:9pt;color:#9ca3af;padding:5px 0;border-top:1px solid #e5e7eb;background:#fff;}
   @media print{.footer{position:fixed;bottom:0;left:0;right:0;}}
 </style></head>
 <body>
@@ -1674,7 +1675,7 @@ function renderQuoteHtml(q, issuer, client){
         <div style="width:55%;border-top:1.5px solid #1a1a1a;margin:0 auto;"></div>
         <div style="font-weight:700;font-size:13px;margin-top:8px;">${escapeHtml(issuer.name||'')}</div>
       </div>
-      <div style="position:fixed;bottom:0;left:0;right:0;text-align:center;font-size:10px;color:#9ca3af;padding:7px 0;border-top:1px solid #e5e7eb;background:#fff;">Orçamento gerado em: ${escapeHtml(dateOnly)}</div>
+      <div style="position:fixed;bottom:0;left:0;right:0;text-align:center;font-size:10px;color:#9ca3af;padding:5px 0;border-top:1px solid #e5e7eb;background:#fff;">Orçamento gerado em: ${escapeHtml(dateOnly)}</div>
     </div>`;
 }
 

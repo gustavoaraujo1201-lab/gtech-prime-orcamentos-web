@@ -938,6 +938,23 @@
       if (typeof currentPreviewQuoteId !== 'undefined' && currentPreviewQuoteId) generatePDFFromQuote(currentPreviewQuoteId);
     });
 
+    // Imprimir no modal
+    document.getElementById('printBtn') && document.getElementById('printBtn').addEventListener('click', () => {
+      const content = document.getElementById('previewArea') ? document.getElementById('previewArea').innerHTML : '';
+      if (!content) { return; }
+      const win = window.open('', '_blank', 'width=900,height=700');
+      win.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Orçamento - SoftPrime</title>
+        <style>
+          *{box-sizing:border-box;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+          @page{margin:2cm;size:A4 portrait;}
+          body{margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;}
+        </style>
+      </head><body>${content}</body></html>`);
+      win.document.close();
+      win.focus();
+      setTimeout(() => { win.print(); win.close(); }, 600);
+    });
+
     // renderPanel() é chamado diretamente pelo app.js (initApp) após carregar os dados.
     // Este interval é apenas fallback caso o app.js já tenha rodado antes deste script.
     const _panelInterval = setInterval(()=>{
