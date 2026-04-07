@@ -48,13 +48,15 @@ function normalizeStr(str){
 let store = { issuers: [], clients: [], quotes: [] };
 
 // ========== QUOTE NUMBER HELPERS ==========
-function computeNextQuoteNumberForIssuer(issuerId, clientId){
-  // SEMPRE exige os dois — emissor E cliente — para calcular a sequência correta
-  if (!issuerId || !clientId) return 1;
-  const filtered = (store.quotes||[]).filter(q =>
-    q.issuerId === issuerId && q.clientId === clientId
-  );
-  return filtered.length + 1;
+function computeNextQuoteNumberForIssuer(issuerId){
+  const issuerQuotes = (store.quotes||[]).filter(q => q.issuerId === issuerId);
+  if (!issuerQuotes.length) return 1;
+  let max = 0;
+  for (const q of issuerQuotes){
+    const m = String(q.numero||'').match(/(\d+)(?!.*\d)/);
+    if (m){ const n = parseInt(m[0],10); if (!isNaN(n) && n > max) max = n; }
+  }
+  return max + 1;
 }
 function formatQuoteNumber(n){
   return `${new Date().getFullYear()}-${String(n).padStart(4,'0')}`;
@@ -354,20 +356,14 @@ function renderClients(){
   if (clientList) clientList.innerHTML = "";
   selectClient.innerHTML = "<option value=''>-- selecione o cliente --</option>";
 
-  // Ordena A-Z (sem acentos)
-  const sorted = (store.clients||[]).slice().sort((a,b) =>
-    normalizeStr(a.name||'').localeCompare(normalizeStr(b.name||''))
-  );
-
-  sorted.forEach(c => {
+  (store.clients||[]).forEach(c => {
     if (clientList){
       const li = document.createElement("li");
       li.innerHTML = `
         <div>
           <strong>${escapeHtml(c.name)}</strong>
           <div class="meta">${escapeHtml(c.cnpjCpf||'')} ${c.phone ? '• ' + escapeHtml(c.phone) : ''}</div>
-          <div class="meta">${escapeHtml(c.address||''
-)}</div>
+          <div class="meta">${escapeHtml(c.address||'')}</div>
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap;">
           <button class="btn btn-outline edit-client" data-id="${c.id}">✏️ Editar</button>
@@ -380,11 +376,6 @@ function renderClients(){
     opt.textContent = `${c.name} ${c.cnpjCpf ? '— ' + c.cnpjCpf : ''}`;
     selectClient.appendChild(opt);
   });
-
-  // Alimenta o componente de busca com autocomplete (index.html)
-  if (typeof window._updateClientSearchList === 'function'){
-    window._updateClientSearchList(sorted);
-  }
 }
 
 function renderQuotes(){
@@ -495,14 +486,8 @@ function recalcTotals(){
 function setDefaultQuoteFields(){
   if (!quoteNumber || !quoteDate || editingQuoteId) return;
   const issuerId = selectIssuer ? selectIssuer.value : null;
-  const clientId = selectClient ? selectClient.value : null;
-  // Só calcula o número quando AMBOS estão selecionados
-  if (issuerId && clientId) {
-    const n = computeNextQuoteNumberForIssuer(issuerId, clientId);
-    quoteNumber.value = formatQuoteNumber(n);
-  } else {
-    quoteNumber.value = '';
-  }
+  const n = issuerId ? computeNextQuoteNumberForIssuer(issuerId) : 1;
+  quoteNumber.value = formatQuoteNumber(n);
   quoteDate.value = new Date().toISOString().slice(0,10);
   if (notes) notes.value = "";
 }
@@ -657,7 +642,6 @@ if (clientForm){
       setLoading(false);
       clientForm.reset(); renderClients(); renderQuotes();
       showNotification("Cliente adicionado com sucesso!","success");
-      setTimeout(function(){ window.location.href = '/index'; }, 1200);
     } catch(err){ console.error("[ERROR] clientForm:",err); setLoading(false); showNotification("Erro ao salvar cliente","error"); }
   });
 }
@@ -717,10 +701,6 @@ if (addItemBtn){
 if (selectIssuer){
   selectIssuer.addEventListener('change', ()=>{ if (!editingQuoteId) setDefaultQuoteFields(); });
 }
-// Atualiza número também quando o cliente muda
-if (selectClient){
-  selectClient.addEventListener('change', ()=>{ if (!editingQuoteId) setDefaultQuoteFields(); });
-}
 
 if (saveQuoteBtn){
   saveQuoteBtn.addEventListener("click", async ()=>{
@@ -738,8 +718,8 @@ if (saveQuoteBtn){
       if (!validItems.length){ showNotification("Adicione pelo menos um item com descrição","error"); return; }
 
       const totals = recalcTotals();
-      // Sempre recalcula o número na hora de salvar — garante sequência correta
-      const numeroValue = formatQuoteNumber(computeNextQuoteNumberForIssuer(issuerId, clientId));
+      let numeroValue = (quoteNumber&&quoteNumber.value||"").trim();
+      if (!numeroValue) numeroValue = formatQuoteNumber(computeNextQuoteNumberForIssuer(issuerId));
       const notesVal = (notes&&notes.value||"").trim();
 
       if (editingQuoteId){
@@ -772,7 +752,7 @@ if (saveQuoteBtn){
       currentItems=[{descricao:"",quantidade:1,valorUnitario:0}];
       renderItems(currentItems); renderQuotes(); setDefaultQuoteFields();
       showNotification(`✅ Orçamento ${q.numero} salvo com sucesso!`,"success");
-      setTimeout(()=>{ window.location.href = '/orcamentos_salvos'; }, 1200);
+      setTimeout(()=>{ quotesList&&quotesList.scrollIntoView({behavior:'smooth',block:'start'}); }, 300);
     } catch(err){ console.error("[ERROR] saveQuoteBtn:",err); setLoading(false); showNotification("Erro ao salvar orçamento","error"); }
   });
 }
@@ -782,7 +762,7 @@ function startEditMode(quoteId){
   if (!q){ showNotification("Orçamento não encontrado","error"); return; }
   editingQuoteId=quoteId;
   if (selectIssuer) selectIssuer.value=q.issuerId||"";
-  if (selectClient){ selectClient.value=q.clientId||""; selectClient.dispatchEvent(new Event("change",{bubbles:true})); }
+  if (selectClient) selectClient.value=q.clientId||"";
   if (quoteNumber){ quoteNumber.value=q.numero||""; quoteNumber.removeAttribute("readonly"); }
   if (quoteDate){ quoteDate.value=(q.createdAt||new Date().toISOString()).slice(0,10); quoteDate.removeAttribute('readonly'); }
   if (notes) notes.value=q.notes||"";
@@ -799,9 +779,6 @@ function endEditMode(){
   if (saveQuoteBtn) saveQuoteBtn.textContent="📄 Gerar Orçamento";
   if (cancelEditBtn) cancelEditBtn.style.display="none";
   if (quoteNumber) quoteNumber.setAttribute("readonly","true");
-  // Limpa select oculto e sincroniza o componente visual
-  if (selectClient){ selectClient.value=""; selectClient.dispatchEvent(new Event("change",{bubbles:true})); }
-  if (selectIssuer) selectIssuer.value="";
   setDefaultQuoteFields();
   if (notes) notes.value="";
 }
@@ -869,6 +846,28 @@ if (closePreview) closePreview.addEventListener("click",()=>previewModal&&previe
 
 const downloadPdfBtn = document.getElementById('downloadPdfBtn');
 if (downloadPdfBtn) downloadPdfBtn.addEventListener("click",()=>{ if (currentPreviewQuoteId) generatePDFFromQuote(currentPreviewQuoteId); });
+
+// ========== PRINT ==========
+function triggerPrint(htmlContent, title=''){
+  const win = window.open('', '_blank', 'width=900,height=700');
+  if (!win){
+    showNotification('Bloqueador de pop-up ativo. Permita pop-ups para imprimir.','error');
+    return;
+  }
+  win.document.open();
+  win.document.write(`<!DOCTYPE html><html lang="pt-BR"><head>
+    <meta charset="utf-8">
+    <title>${title}</title>
+    <style>
+      *{box-sizing:border-box;}
+      @page{margin:1.5cm;size:A4 portrait;}
+      body{margin:0;padding:20px;font-family:Arial,Helvetica,sans-serif;}
+      @media print{body{padding:0;}}
+    </style>
+  </head><body>${htmlContent}</body></html>`);
+  win.document.close();
+  win.onload = () => { win.focus(); win.print(); };
+}
 
 if (printBtn){
   printBtn.addEventListener("click",()=>{
@@ -1660,6 +1659,7 @@ function renderQuoteHtml(q, issuer, client){
       <div style="margin-top:6px;color:#78350f;font-size:13px;white-space:pre-wrap;">${escapeHtml(q.notes)}</div>
     </div>`:'';
   return `
+    <style>@media print{.sig-line{margin-top:120px!important;}}</style>
     <div style="font-family:Arial,Helvetica,sans-serif;max-width:760px;margin:0 auto;padding:16px;color:#1a1a1a;position:relative;">
       ${watermarkHtml}
       ${logoHtml}
@@ -1691,7 +1691,7 @@ function renderQuoteHtml(q, issuer, client){
         </tr>
       </table>
       ${notesHtml}
-      <div style="margin-top:200px;margin-bottom:16px;text-align:center;">
+      <div style="margin-top:40px;margin-bottom:16px;text-align:center;" class="sig-line">
         <div style="width:55%;border-top:1.5px solid #1a1a1a;margin:0 auto;"></div>
         <div style="font-weight:700;font-size:13px;margin-top:8px;">${escapeHtml(issuer.name||'')}</div>
       </div>
