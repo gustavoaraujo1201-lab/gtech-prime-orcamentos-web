@@ -21,6 +21,16 @@
       "permanent": true
     },
     {
+      "source": "/cadastro_emissor.html",
+      "destination": "/cadastro_emissor",
+      "permanent": true
+    },
+    {
+      "source": "/cadastro_cliente.html",
+      "destination": "/cadastro_cliente",
+      "permanent": true
+    },
+    {
       "source": "/orcamentos_salvos.html",
       "destination": "/orcamentos_salvos",
       "permanent": true
@@ -35,6 +45,8 @@
     { "source": "/login", "destination": "/login.html" },
     { "source": "/index", "destination": "/index.html" },
     { "source": "/cadastro", "destination": "/cadastro.html" },
+    { "source": "/cadastro_emissor", "destination": "/cadastro_emissor.html" },
+    { "source": "/cadastro_cliente", "destination": "/cadastro_cliente.html" },
     { "source": "/orcamentos_salvos", "destination": "/orcamentos_salvos.html" },
     { "source": "/planos", "destination": "/planos.html" }
   ],

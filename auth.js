@@ -135,12 +135,16 @@ class AuthManager {
 
   _isAppPage() {
     const p = window.location.pathname;
-    // Reconhece as 3 páginas do app: início, cadastro e orçamentos salvos
+    // Reconhece todas as páginas do app
     return p.endsWith('index.html')
         || p.endsWith('cadastro.html')
+        || p.endsWith('cadastro_emissor.html')
+        || p.endsWith('cadastro_cliente.html')
         || p.endsWith('orcamentos_salvos.html')
         || p === '/' || p === '' || p === '/index' || p === '/index/'
         || p === '/cadastro' || p === '/cadastro/'
+        || p === '/cadastro_emissor' || p === '/cadastro_emissor/'
+        || p === '/cadastro_cliente' || p === '/cadastro_cliente/'
         || p === '/orcamentos_salvos' || p === '/orcamentos_salvos/';
   }
 
