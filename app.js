@@ -169,7 +169,7 @@ async function dbDeleteClient(id){
 async function dbLoadQuotes(){
   const sb = getSupabase(); const uid = getUserId();
   if (!sb || !uid) return [];
-  const { data, error } = await sb.from('quotes').select('*').eq('user_id', uid).order('created_at');
+  const { data, error } = await sb.from('quotes').select('*').eq('user_id', uid).order('numero', { ascending: false });
   if (error){ console.error('dbLoadQuotes:', error); return []; }
   return (data||[]).map(r => ({
     id: r.id, issuerId: r.issuer_id||'', clientId: r.client_id||'',
