@@ -11,6 +11,13 @@
   const LS_CHECKED_KEY = 'softprime_plan_checked_at';
   const CHECK_TTL      = 5 * 60 * 1000; // revalida do Supabase a cada 5 min
 
+  // ── Usuários com acesso vitalício (nunca cobrados) ─────────────────────
+  // Para adicionar mais usuários, inclua o UUID deles neste Set.
+  const LIFETIME_USERS = new Set([
+    '3716ddcb-fe65-4c61-8393-e5525388e8d8', // Gustavo Araujo
+    'e0c0898e-b904-4df9-a5f9-ede4bc86a577', // AutoEletrica.BLTec
+  ]);
+
   // Recursos liberados por plano
   const PLAN_FEATURES = {
     free:    [],
@@ -74,6 +81,7 @@
     _trialStart: null,   // data ISO de início do trial
     _ready: false,       // true após primeiro sync com Supabase
     _readyCallbacks: [],
+    _isLifetime: false,  // true se o usuário tem acesso vitalício
 
     // ── Inicializa — sincroniza com Supabase ──────────────────────────────
     async init() {
@@ -92,8 +100,20 @@
 
     // ── Busca/cria dados de plano no Supabase ────────────────────────────
     async _syncFromSupabase() {
-      const sb  = getSupabaseClient();
       const uid = getUserId();
+
+      // ── Acesso vitalício — sai antes de qualquer verificação ─────────────
+      if (uid && LIFETIME_USERS.has(uid)) {
+        console.log('[PlanGuard] Usuário vitalício detectado — plano premium aplicado.');
+        this._plan       = 'premium';
+        this._trialStart = null;
+        this._isLifetime = true;
+        localStorage.setItem(LS_PLAN_KEY,    'premium');
+        localStorage.setItem(LS_CHECKED_KEY, String(Date.now()));
+        return;
+      }
+
+      const sb = getSupabaseClient();
 
       // Se não há cliente Supabase ou usuário, usa apenas cache local
       if (!sb || !uid) {
@@ -189,6 +209,10 @@
       return this._plan === 'free' && !!this._trialStart;
     },
 
+    isLifetimeUser() {
+      return this._isLifetime === true;
+    },
+
     // ── Aplica restrições de acesso na UI ────────────────────────────────
     _applyAccess() {
       const plan = this.getActivePlan();
@@ -203,9 +227,13 @@
     },
 
     // Banner topo da tela: dias restantes de trial ou expirado
+    // Usuários vitalícios não veem nenhum banner.
     _renderTrialBanner(plan) {
       const existing = document.getElementById('sp-trial-banner');
       if (existing) existing.remove();
+
+      // Usuário vitalício — sem banner
+      if (this._isLifetime) return;
 
       const mainContent = document.querySelector('.main-content');
       if (!mainContent) return;
@@ -243,6 +271,9 @@
 
     // ── Paywall ───────────────────────────────────────────────────────────
     openPaywall(feature) {
+      // Usuários vitalícios nunca veem o paywall
+      if (this._isLifetime) return;
+
       const msg = PAYWALL_MSGS[feature] || {
         icon: '🔒', title: 'Recurso Premium',
         subtitle: 'Este recurso requer um plano pago.'
@@ -284,6 +315,9 @@
 
     // ── Ativa plano após pagamento ────────────────────────────────────────
     async activatePlan(planKey) {
+      // Usuários vitalícios não podem ter o plano alterado por pagamento
+      if (this._isLifetime) return;
+
       const sb  = getSupabaseClient();
       const uid = getUserId();
 
@@ -302,6 +336,9 @@
 
     // Ativa checkout (compatibilidade com código existente)
     checkout(planKey) {
+      // Usuários vitalícios não são redirecionados para pagamento
+      if (this._isLifetime) return;
+
       localStorage.setItem('pendingPlan', planKey);
       window.location.href = MP_LINKS[planKey] || '/planos';
     },
@@ -309,9 +346,9 @@
 
   // ── Verifica retorno do Mercado Pago em qualquer página ────────────────
   (function checkPaymentReturn() {
-    const params     = new URLSearchParams(window.location.search);
-    const paymentId  = params.get('payment_id') || params.get('collection_id');
-    const status     = params.get('status')     || params.get('collection_status');
+    const params      = new URLSearchParams(window.location.search);
+    const paymentId   = params.get('payment_id') || params.get('collection_id');
+    const status      = params.get('status')     || params.get('collection_status');
     const pendingPlan = localStorage.getItem('pendingPlan');
 
     if ((paymentId || status === 'approved') && pendingPlan) {
